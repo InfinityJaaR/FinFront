@@ -14,7 +14,9 @@ export default function LoginScreen() {
       
       // Si el login es exitoso, redirigir al dashboard
       if (response.access_token) {
-        navigate('/dashboard');
+        // Usar window.location para forzar una recarga completa
+        // Esto asegura que App.jsx recargue y detecte la autenticación
+        window.location.href = '/dashboard';
       }
     } catch (error) {
       console.error('Error en login:', error);

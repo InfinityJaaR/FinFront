@@ -98,10 +98,13 @@ const FinancialLogin = ({ onLogin, onRegister, overlayImage }) => {
     setIsLoading(true)
     try {
       await onLogin?.(formData.email, formData.password)
+      // Si llegamos aquí, el login fue exitoso
+      // No seteamos isLoading a false para mantener el estado de carga
+      // mientras se redirige
     } catch (err) {
       setError("Credenciales incorrectas. Inténtalo de nuevo.")
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   const handleCreatePasswordSubmit = async (e) => {
