@@ -84,9 +84,22 @@ const FinancialDashboard = ({
     {
       icon: TrendingUp, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Rubros",
-      href: "/dashboard/gestion-empresas/rubros",
-      // Esta línea controla la visibilidad en el sidebar, usando el permiso de tu backend.
+      href: "/dashboard/rubros",
       permissions: ["gestionar_rubros"],
+      roles: ["Administrador"]
+    },
+    {
+      icon: Wallet, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
+      label: "Empresas",
+      href: "/dashboard/empresas",
+      permissions: ["gestionar_empresas"],
+      roles: ["Administrador"]
+    },
+    {
+      icon: CreditCard, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
+      label: "Ratios",
+      href: "/dashboard/rubros",
+      permissions: ["gestionar_ratios_definicion"],
       roles: ["Administrador"]
     },
     {

@@ -6,6 +6,7 @@ import Dashboard from './components/ui/Dashboard/Dashboard'
 import Inicio from './pages/dashboard/Inicio'
 import authService from './services/auth/authService'
 import RubrosPage from './pages/GestionEmpresas/Rubros/RubroPage'
+import EmpresaPage from './pages/GestionEmpresas/Empresas/EmpresaPage'
 
 // Función para verificar autenticación leyendo de localStorage
 function isAuthenticated() {
@@ -192,10 +193,26 @@ function App() {
               }
             />
             <Route
-              path="gestion-empresas/rubros"
+              path="rubros"
               element={
                 <PermissionRoute requiredPermissions={["gestionar_rubros"]}>
                   <RubrosPage />
+                </PermissionRoute>
+              }
+            />
+             <Route
+              path="empresas"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_empresas"]}>
+                  <EmpresaPage />
+                </PermissionRoute>
+              }
+            />
+             <Route
+              path="definicion-ratios"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_ratios_definicion"]}>
+                  {/* <RubrosPage /> */}
                 </PermissionRoute>
               }
             />
