@@ -33,20 +33,20 @@ const FinancialDashboard = ({
   useEffect(() => {
     const user = authService.getCurrentUser()
     const permissions = authService.getPermissions()
-    
+
     if (user) {
       // Obtener primer nombre y primer apellido
       // Soporta tanto "name" como "nombre" y "first_name"
       const firstName = (user.name || user.nombre || user.first_name || "")?.split(' ')[0] || ""
       const lastName = (user.last_name || user.apellido || user.apellidos || "")?.split(' ')[0] || ""
       const fullName = `${firstName} ${lastName}`.trim()
-      
+
       // Obtener el rol
       const role = user.roles?.[0]?.name || user.role?.name || authService.getUserRole() || "Sin rol"
-      
+
       // Obtener todos los roles (pueden ser múltiples)
       const userRoles = user.roles?.map(r => r.name) || []
-      
+
       setUserData({
         userName: fullName || user.email || "Usuario",
         userRole: role,
@@ -75,54 +75,76 @@ const FinancialDashboard = ({
 
   // Menú de navegación con protección por roles y permisos
   const menuItems = [
-    { 
-      icon: Home, 
-      label: "Dashboard", 
+    {
+      icon: Home,
+      label: "Dashboard",
       href: "/dashboard"
       // Sin restricciones - todos pueden ver
     },
-    { 
-      icon: Wallet, 
-      label: "Cuentas", 
-      href: "/dashboard/accounts", 
+    {
+      icon: TrendingUp, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
+      label: "Rubros",
+      href: "/dashboard/rubros",
+      permissions: ["gestionar_rubros"],
+      roles: ["Administrador"]
+    },
+    {
+      icon: Wallet, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
+      label: "Empresas",
+      href: "/dashboard/empresas",
+      permissions: ["gestionar_empresas"],
+      roles: ["Administrador"]
+    },
+    {
+      icon: CreditCard, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
+      label: "Ratios",
+      href: "/dashboard/definicion-ratios",
+      permissions: ["gestionar_ratios_definicion"],
+      roles: ["Administrador"]
+    },
+    {
+      icon: Wallet,
+      label: "Cuentas",
+      href: "/dashboard/accounts",
       badge: 3,
       roles: ["Administrador", "Analista Financiero"], // Solo estos roles pueden ver
       // permissions: ["ver_cuentas"] // Opcional: también puedes agregar permisos
     },
-    { 
-      icon: CreditCard, 
-      label: "Transacciones", 
+    {
+      icon: CreditCard,
+      label: "Transacciones",
       href: "/dashboard/transactions",
       roles: ["Administrador", "Inversor"],
       // permissions: ["ver_transacciones"]
     },
-    { 
-      icon: TrendingUp, 
-      label: "Inversiones", 
+
+    {
+      icon: TrendingUp,
+      label: "Inversiones",
       href: "/dashboard/investments",
       roles: ["Inversor"],
     },
-    { 
-      icon: BarChart3, 
-      label: "Reportes", 
+    {
+      icon: BarChart3,
+      label: "Reportes",
       href: "/dashboard/reports",
       // Sin restricciones - todos pueden ver reportes
     },
-    { 
-      icon: PieChart, 
-      label: "Análisis", 
+    {
+      icon: PieChart,
+      label: "Análisis",
       href: "/dashboard/analytics",
       roles: ["Administrador", "Analista Financiero"],
     },
-    { 
-      icon: Settings, 
-      label: "Configuración", 
+    {
+      icon: Settings,
+      label: "Configuración",
       href: "/dashboard/settings",
       roles: ["Administrador"],
     },
-    { 
-      icon: HelpCircle, 
-      label: "Ayuda", 
+    {
+      icon: HelpCircle,
+      label: "Ayuda",
       href: "/dashboard/help"
       // Sin restricciones - todos pueden ver ayuda
     },
@@ -145,7 +167,7 @@ const FinancialDashboard = ({
 
     // Verificar permisos (opcional)
     if (item.permissions && item.permissions.length > 0) {
-      const hasPermission = item.permissions.some(permission => 
+      const hasPermission = item.permissions.some(permission =>
         userData.permissions.includes(permission)
       )
       if (!hasPermission) {
@@ -162,44 +184,44 @@ const FinancialDashboard = ({
   // Función para generar breadcrumbs automáticamente desde la URL
   const generateBreadcrumbs = () => {
     const pathSegments = location.pathname.split('/').filter(Boolean)
-    
+
     // Si estamos en /dashboard (página principal), solo mostrar "Inicio"
     if (location.pathname === "/dashboard") {
       return [{ label: "Inicio", href: "#" }]
     }
-    
+
     const crumbs = [{ label: "Inicio", href: "/dashboard" }]
-    
+
     let currentPath = ""
-    
+
     pathSegments.forEach((segment, index) => {
       currentPath += `/${segment}`
-      
+
       // Saltar el segmento "dashboard" en los breadcrumbs
       if (segment === "dashboard") {
         return
       }
-      
+
       // Buscar en menuItems si existe un label definido
       const menuItem = menuItems.find(item => item.href === currentPath)
-      
+
       // Si es el último segmento, no tiene link (es la página actual)
       const isLast = index === pathSegments.length - 1
-      
+
       // Convertir el segmento de URL a un nombre legible
-      const label = menuItem 
-        ? menuItem.label 
+      const label = menuItem
+        ? menuItem.label
         : segment
-            .split('-')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ')
-      
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+
       crumbs.push({
         label,
         href: isLast ? "#" : currentPath
       })
     })
-    
+
     return crumbs
   }
 
@@ -245,7 +267,7 @@ const FinancialDashboard = ({
                 }}
                 style={{
                   backgroundColor: isActive
-                    ? 'rgb(59, 130, 246)' 
+                    ? 'rgb(59, 130, 246)'
                     : 'transparent'
                 }}
                 className={cn(
@@ -339,10 +361,10 @@ const FinancialDashboard = ({
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   onMouseEnter={() => setIsUserButtonHovered(true)}
                   onMouseLeave={() => setIsUserButtonHovered(false)}
-                  style={{ 
-                    backgroundColor: isUserButtonHovered ? '#F3F4F6' : 'white', 
-                    border: 'none', 
-                    outline: 'none' 
+                  style={{
+                    backgroundColor: isUserButtonHovered ? '#F3F4F6' : 'white',
+                    border: 'none',
+                    outline: 'none'
                   }}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors"
                 >
@@ -358,13 +380,13 @@ const FinancialDashboard = ({
                 {/* Dropdown del usuario */}
                 {isUserMenuOpen && (
                   <>
-                    <div 
-                      className="fixed inset-0" 
-                      style={{ zIndex: 9998 }} 
+                    <div
+                      className="fixed inset-0"
+                      style={{ zIndex: 9998 }}
                       onClick={(e) => {
                         e.stopPropagation()
                         setIsUserMenuOpen(false)
-                      }} 
+                      }}
                     />
                     <div className="absolute right-0 top-full mt-2 w-64 rounded-xl shadow-2xl animate-scale-in" style={{ backgroundColor: 'white', borderWidth: '1px', borderColor: '#E5E7EB', zIndex: 9999 }}>
                       <div className="p-4" style={{ borderBottomWidth: '1px', borderColor: '#E5E7EB' }}>
@@ -380,13 +402,13 @@ const FinancialDashboard = ({
                       </div>
 
                       <div className="p-2">
-                        <button 
+                        <button
                           onMouseEnter={() => setIsProfileHovered(true)}
                           onMouseLeave={() => setIsProfileHovered(false)}
-                          style={{ 
-                            backgroundColor: isProfileHovered ? '#F3F4F6' : 'transparent', 
-                            border: 'none', 
-                            outline: 'none' 
+                          style={{
+                            backgroundColor: isProfileHovered ? '#F3F4F6' : 'transparent',
+                            border: 'none',
+                            outline: 'none'
                           }}
                           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left"
                         >
@@ -398,10 +420,10 @@ const FinancialDashboard = ({
                           onClick={handleLogout}
                           onMouseEnter={() => setIsLogoutHovered(true)}
                           onMouseLeave={() => setIsLogoutHovered(false)}
-                          style={{ 
-                            backgroundColor: isLogoutHovered ? '#FEF2F2' : 'transparent', 
-                            border: 'none', 
-                            outline: 'none' 
+                          style={{
+                            backgroundColor: isLogoutHovered ? '#FEF2F2' : 'transparent',
+                            border: 'none',
+                            outline: 'none'
                           }}
                           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left"
                         >
