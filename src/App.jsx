@@ -7,6 +7,7 @@ import Inicio from './pages/dashboard/Inicio'
 import authService from './services/auth/authService'
 import RubrosPage from './pages/GestionEmpresas/Rubros/RubroPage'
 import EmpresaPage from './pages/GestionEmpresas/Empresas/EmpresaPage'
+import RatiosPage from './pages/GestionEmpresas/Ratios/RatiosPage'
 
 // Función para verificar autenticación leyendo de localStorage
 function isAuthenticated() {
@@ -212,7 +213,7 @@ function App() {
               path="definicion-ratios"
               element={
                 <PermissionRoute requiredPermissions={["gestionar_ratios_definicion"]}>
-                  {/* <RubrosPage /> */}
+                  <RatiosPage />
                 </PermissionRoute>
               }
             />

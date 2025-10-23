@@ -98,7 +98,7 @@ const FinancialDashboard = ({
     {
       icon: CreditCard, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Ratios",
-      href: "/dashboard/rubros",
+      href: "/dashboard/definicion-ratios",
       permissions: ["gestionar_ratios_definicion"],
       roles: ["Administrador"]
     },
