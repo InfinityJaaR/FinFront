@@ -5,6 +5,7 @@ import Login from './pages/auth/LoginScreen'
 import Dashboard from './components/ui/Dashboard/Dashboard'
 import Inicio from './pages/dashboard/Inicio'
 import authService from './services/auth/authService'
+import RubrosPage from './pages/GestionEmpresas/Rubros/RubroPage'
 
 // Función para verificar autenticación leyendo de localStorage
 function isAuthenticated() {
@@ -32,30 +33,30 @@ function PublicRoute({ children }) {
 function RoleRoute({ allowedRoles, children }) {
   const user = authService.getCurrentUser()
   const userRoles = user?.roles?.map(r => r.name) || []
-  
+
   const hasRole = allowedRoles.some(role => userRoles.includes(role))
-  
+
   if (!hasRole) {
     // Redirigir al dashboard si no tiene el rol requerido
     return <Navigate to="/dashboard" replace />
   }
-  
+
   return children
 }
 
 // Componente para proteger rutas por permiso
 function PermissionRoute({ requiredPermissions, children }) {
   const permissions = authService.getPermissions()
-  
-  const hasPermission = requiredPermissions.some(permission => 
+
+  const hasPermission = requiredPermissions.some(permission =>
     permissions.includes(permission)
   )
-  
+
   if (!hasPermission) {
     // Redirigir al dashboard si no tiene el permiso requerido
     return <Navigate to="/dashboard" replace />
   }
-  
+
   return children
 }
 
@@ -71,7 +72,7 @@ function App() {
 
     // Escuchar cambios en el storage
     window.addEventListener('storage', handleStorageChange)
-    
+
     // También podemos forzar una verificación periódica
     const interval = setInterval(() => {
       setAuth(isAuthenticated())
@@ -106,12 +107,12 @@ function App() {
           <Route path="/dashboard" element={<Dashboard onLogout={handleLogout} />}>
             {/* Ruta de inicio del dashboard - accesible para todos */}
             <Route index element={<Inicio />} />
-            
+
             {/* Ejemplos de rutas protegidas por rol */}
-            
+
             {/* Solo Administradores */}
-            <Route 
-              path="accounts" 
+            <Route
+              path="accounts"
               element={
                 <RoleRoute allowedRoles={["Administrador", "Admin"]}>
                   {/* <Cuentas /> */}
@@ -120,12 +121,13 @@ function App() {
                     <p>Solo usuarios con rol Administrador o Admin pueden ver esta página.</p>
                   </div>
                 </RoleRoute>
-              } 
+              }
             />
-            
+
+
             {/* Administradores y Contadores */}
-            <Route 
-              path="transactions" 
+            <Route
+              path="transactions"
               element={
                 <RoleRoute allowedRoles={["Administrador", "Admin", "Contador"]}>
                   {/* <Transacciones /> */}
@@ -134,12 +136,12 @@ function App() {
                     <p>Solo usuarios con rol Administrador, Admin o Contador pueden ver esta página.</p>
                   </div>
                 </RoleRoute>
-              } 
+              }
             />
-            
+
             {/* Administradores solamente */}
-            <Route 
-              path="investments" 
+            <Route
+              path="investments"
               element={
                 <RoleRoute allowedRoles={["Administrador", "Admin"]}>
                   {/* <Inversiones /> */}
@@ -148,23 +150,23 @@ function App() {
                     <p>Solo Administradores pueden ver esta página.</p>
                   </div>
                 </RoleRoute>
-              } 
+              }
             />
-            
+
             {/* Ruta accesible para todos - sin restricciones */}
-            <Route 
-              path="reports" 
+            <Route
+              path="reports"
               element={
                 <div className="p-6">
                   <h1 className="text-2xl font-bold">Reportes</h1>
                   <p>Todos los usuarios autenticados pueden ver esta página.</p>
                 </div>
-              } 
+              }
             />
-            
+
             {/* Administradores y Analistas */}
-            <Route 
-              path="analytics" 
+            <Route
+              path="analytics"
               element={
                 <RoleRoute allowedRoles={["Administrador", "Admin", "Analista"]}>
                   {/* <Analisis /> */}
@@ -173,12 +175,12 @@ function App() {
                     <p>Solo Administradores y Analistas pueden ver esta página.</p>
                   </div>
                 </RoleRoute>
-              } 
+              }
             />
-            
+
             {/* Solo Administradores */}
-            <Route 
-              path="settings" 
+            <Route
+              path="settings"
               element={
                 <RoleRoute allowedRoles={["Administrador", "Admin"]}>
                   {/* <Configuracion /> */}
@@ -187,20 +189,28 @@ function App() {
                     <p>Solo Administradores pueden ver esta página.</p>
                   </div>
                 </RoleRoute>
-              } 
+              }
             />
-            
+            <Route
+              path="gestion-empresas/rubros"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_rubros"]}>
+                  <RubrosPage />
+                </PermissionRoute>
+              }
+            />
+
             {/* Accesible para todos */}
-            <Route 
-              path="help" 
+            <Route
+              path="help"
               element={
                 <div className="p-6">
                   <h1 className="text-2xl font-bold">Ayuda</h1>
                   <p>Todos los usuarios pueden acceder a la ayuda.</p>
                 </div>
-              } 
+              }
             />
-            
+
             {/* Aquí puedes agregar más rutas con protección por permisos */}
             {/* Ejemplo con permisos: */}
             {/* <Route 
