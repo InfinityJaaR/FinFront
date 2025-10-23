@@ -1,0 +1,76 @@
+import React from 'react';
+import { TrendingUp } from 'lucide-react';
+import RubroActionsCell from './RubroActionsCell.jsx'; 
+
+/**
+ * Componente de tabla para mostrar la lista de Rubros.
+ * Se asegura de que la estética esté alineada con Empresas y Ratios.
+ */
+const RubroTable = ({ rubros, onView, onEdit, onDelete, isSubmitting }) => {
+    
+    if (rubros.length === 0) {
+        return (
+            <div className="text-center py-10 text-gray-500">
+                <TrendingUp className="h-10 w-10 mx-auto mb-3 text-gray-400" />
+                <p className="text-lg">No hay rubros registrados.</p>
+                <p className="text-sm mt-1">Utiliza el botón 'Nuevo Rubro' para agregar uno.</p>
+            </div>
+        );
+    }
+    
+    return (
+        // Contenedor principal con sombra y bordes redondeados, como en Empresas/Ratios
+        <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código / Nombre</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Descripción</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">P. Ácida</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">P. Liquidez</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">P. Apalancamiento</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">P. Rentabilidad</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {rubros.map((rubro) => (
+                            <tr key={rubro.id} className="hover:bg-gray-50 transition-colors">
+                                {/* Columna Código/Nombre: Estilo más limpio */}
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                    <div className="text-sm font-semibold text-indigo-700">{rubro.codigo}</div>
+                                    <div className="text-xs text-gray-800">{rubro.nombre}</div>
+                                </td>
+                                
+                                {/* DESCRIPCIÓN: ELIMINAMOS 'truncate' y 'whitespace-nowrap' */}
+                                <td className="px-4 py-3 text-sm text-gray-600 max-w-sm">
+                                    {rubro.descripcion || 'N/A'}
+                                </td>
+                                
+                                {/* Celdas de Promedio: Centradas y formato de número */}
+                                <td className="px-4 py-3 text-center text-sm font-medium font-mono text-gray-800">{rubro.promedio_prueba_acida || '-'}</td>
+                                <td className="px-4 py-3 text-center text-sm font-medium font-mono text-gray-800">{rubro.promedio_liquidez_corriente || '-'}</td>
+                                <td className="px-4 py-3 text-center text-sm font-medium font-mono text-gray-800">{rubro.promedio_apalancamiento || '-'}</td>
+                                <td className="px-4 py-3 text-center text-sm font-medium font-mono text-gray-800">{rubro.promedio_rentabilidad || '-'}</td>
+                                
+                                {/* Celda de Acciones */}
+                                <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
+                                    <RubroActionsCell 
+                                        rubro={rubro} 
+                                        onView={onView} 
+                                        onEdit={onEdit} 
+                                        onDelete={onDelete} 
+                                        isSubmitting={isSubmitting}
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+export default RubroTable;

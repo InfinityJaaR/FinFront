@@ -1,34 +1,258 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation } from 'react-router-dom'
 import './App.css'
+import Login from './pages/auth/LoginScreen'
+import Dashboard from './components/ui/Dashboard/Dashboard'
+import Inicio from './pages/dashboard/Inicio'
+import authService from './services/auth/authService'
+import RubrosPage from './pages/GestionEmpresas/Rubros/RubroPage'
+import EmpresaPage from './pages/GestionEmpresas/Empresas/EmpresaPage'
+import RatiosPage from './pages/GestionEmpresas/Ratios/RatiosPage'
+
+// Función para verificar autenticación leyendo de localStorage
+function isAuthenticated() {
+  return !!localStorage.getItem('token')
+}
+
+// Componente para proteger rutas privadas
+function PrivateRoute() {
+  const location = useLocation()
+  if (!isAuthenticated()) {
+    return <Navigate to="/" state={{ from: location }} replace />
+  }
+  return <Outlet />
+}
+
+// Componente para evitar mostrar login si ya está autenticado
+function PublicRoute({ children }) {
+  if (isAuthenticated()) {
+    return <Navigate to="/dashboard" replace />
+  }
+  return children
+}
+
+// Componente para proteger rutas por rol
+function RoleRoute({ allowedRoles, children }) {
+  const user = authService.getCurrentUser()
+  const userRoles = user?.roles?.map(r => r.name) || []
+
+  const hasRole = allowedRoles.some(role => userRoles.includes(role))
+
+  if (!hasRole) {
+    // Redirigir al dashboard si no tiene el rol requerido
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return children
+}
+
+// Componente para proteger rutas por permiso
+function PermissionRoute({ requiredPermissions, children }) {
+  const permissions = authService.getPermissions()
+
+  const hasPermission = requiredPermissions.some(permission =>
+    permissions.includes(permission)
+  )
+
+  if (!hasPermission) {
+    // Redirigir al dashboard si no tiene el permiso requerido
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return children
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  // Estado local que se sincroniza con localStorage
+  const [auth, setAuth] = useState(isAuthenticated())
+
+  useEffect(() => {
+    // Actualizar el estado cuando cambie localStorage
+    const handleStorageChange = () => {
+      setAuth(isAuthenticated())
+    }
+
+    // Escuchar cambios en el storage
+    window.addEventListener('storage', handleStorageChange)
+
+    // También podemos forzar una verificación periódica
+    const interval = setInterval(() => {
+      setAuth(isAuthenticated())
+    }, 100) // Verificar cada 100ms
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    await authService.logout()
+    setAuth(false)
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Router>
+      <Routes>
+        {/* Ruta pública para login en "/" */}
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
+        {/* Rutas protegidas bajo /dashboard */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/dashboard" element={<Dashboard onLogout={handleLogout} />}>
+            {/* Ruta de inicio del dashboard - accesible para todos */}
+            <Route index element={<Inicio />} />
+
+            {/* Ejemplos de rutas protegidas por rol */}
+
+            {/* Solo Administradores */}
+            <Route
+              path="accounts"
+              element={
+                <RoleRoute allowedRoles={["Administrador", "Admin"]}>
+                  {/* <Cuentas /> */}
+                  <div className="p-6">
+                    <h1 className="text-2xl font-bold">Cuentas</h1>
+                    <p>Solo usuarios con rol Administrador o Admin pueden ver esta página.</p>
+                  </div>
+                </RoleRoute>
+              }
+            />
+
+
+            {/* Administradores y Contadores */}
+            <Route
+              path="transactions"
+              element={
+                <RoleRoute allowedRoles={["Administrador", "Admin", "Contador"]}>
+                  {/* <Transacciones /> */}
+                  <div className="p-6">
+                    <h1 className="text-2xl font-bold">Transacciones</h1>
+                    <p>Solo usuarios con rol Administrador, Admin o Contador pueden ver esta página.</p>
+                  </div>
+                </RoleRoute>
+              }
+            />
+
+            {/* Administradores solamente */}
+            <Route
+              path="investments"
+              element={
+                <RoleRoute allowedRoles={["Administrador", "Admin"]}>
+                  {/* <Inversiones /> */}
+                  <div className="p-6">
+                    <h1 className="text-2xl font-bold">Inversiones</h1>
+                    <p>Solo Administradores pueden ver esta página.</p>
+                  </div>
+                </RoleRoute>
+              }
+            />
+
+            {/* Ruta accesible para todos - sin restricciones */}
+            <Route
+              path="reports"
+              element={
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold">Reportes</h1>
+                  <p>Todos los usuarios autenticados pueden ver esta página.</p>
+                </div>
+              }
+            />
+
+            {/* Administradores y Analistas */}
+            <Route
+              path="analytics"
+              element={
+                <RoleRoute allowedRoles={["Administrador", "Admin", "Analista"]}>
+                  {/* <Analisis /> */}
+                  <div className="p-6">
+                    <h1 className="text-2xl font-bold">Análisis</h1>
+                    <p>Solo Administradores y Analistas pueden ver esta página.</p>
+                  </div>
+                </RoleRoute>
+              }
+            />
+
+            {/* Solo Administradores */}
+            <Route
+              path="settings"
+              element={
+                <RoleRoute allowedRoles={["Administrador", "Admin"]}>
+                  {/* <Configuracion /> */}
+                  <div className="p-6">
+                    <h1 className="text-2xl font-bold">Configuración</h1>
+                    <p>Solo Administradores pueden ver esta página.</p>
+                  </div>
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="rubros"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_rubros"]}>
+                  <RubrosPage />
+                </PermissionRoute>
+              }
+            />
+             <Route
+              path="empresas"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_empresas"]}>
+                  <EmpresaPage />
+                </PermissionRoute>
+              }
+            />
+             <Route
+              path="definicion-ratios"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_ratios_definicion"]}>
+                  <RatiosPage />
+                </PermissionRoute>
+              }
+            />
+
+            {/* Accesible para todos */}
+            <Route
+              path="help"
+              element={
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold">Ayuda</h1>
+                  <p>Todos los usuarios pueden acceder a la ayuda.</p>
+                </div>
+              }
+            />
+
+            {/* Aquí puedes agregar más rutas con protección por permisos */}
+            {/* Ejemplo con permisos: */}
+            {/* <Route 
+              path="admin-panel" 
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_usuarios", "configurar_sistema"]}>
+                  <AdminPanel />
+                </PermissionRoute>
+              } 
+            /> */}
+          </Route>
+        </Route>
+
+        {/* Redirección por defecto */}
+        <Route
+          path="*"
+          element={
+            isAuthenticated()
+              ? <Navigate to="/dashboard" replace />
+              : <Navigate to="/" replace />
+          }
+        />
+      </Routes>
+    </Router>
   )
 }
 
