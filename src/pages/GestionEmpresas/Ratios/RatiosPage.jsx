@@ -1,11 +1,9 @@
 import React from 'react';
 import { Plus, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 // Corrección de rutas: usar alias @ para resolver desde src
 import useRatios from '@/hooks/GestionEmpresas/Ratios/useRatios';
 import RatioList from '@/components/GestionEmpresas/Ratios/RatioList';
-
-// Placeholder de navegación (usando un hook simulado)
-const useRouter = () => ({ push: (path) => console.log(`Navigating to: ${path}`) });
 
 const RatiosPage = () => {
     const {
@@ -19,22 +17,19 @@ const RatiosPage = () => {
         handleDeleteRatio,
     } = useRatios();
 
-    const router = useRouter(); 
+    const navigate = useNavigate();
 
     // Funciones de acción de la tabla
     const handleView = (id) => {
-        alert(`Ver detalles del Ratio: ${id}`);
-        // router.push(`/ratios/definiciones/${id}`);
+        navigate(`/dashboard/gestion-empresas/definicion-ratios/${id}`);
     };
 
     const handleEdit = (id) => {
-        alert(`Editar Ratio: ${id}`);
-        // router.push(`/ratios/definiciones/edit/${id}`);
+        navigate(`/dashboard/gestion-empresas/definicion-ratios/${id}/edit`);
     };
 
     const handleNew = () => {
-        alert('Ir a la página de creación de Ratio');
-        // router.push('/ratios/definiciones/create');
+        navigate('/dashboard/gestion-empresas/definicion-ratios/create');
     };
 
     return (

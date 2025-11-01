@@ -2,7 +2,8 @@ import React from 'react';
 import { useRubros } from '@/hooks/GestionEmpresas/Rubros/useRubros'; // Hook de gestión de datos
 import { useAuth } from '@/hooks/auth/useAuth'; // Tu hook existente para permisos
 import { Plus, Loader2, AlertTriangle, X } from 'lucide-react';
-import RubroFormModal from '@/components/GestionEmpresas/Rubros/RubroFormModal'; // Nuevo componente
+import { useNavigate } from 'react-router-dom';
+import { useModal } from '@/context/ModalContext'
 import RubroTable from '@/components/GestionEmpresas/Rubros/RubroTable'; // Nuevo componente
 
 const RubrosPage = () => {
@@ -11,8 +12,6 @@ const RubrosPage = () => {
         isLoading, 
         error, 
         deleteRubro, 
-        openCreateModal, 
-        openEditModal, 
         isSubmitting
     } = useRubros();
     
@@ -21,19 +20,20 @@ const RubrosPage = () => {
     // Verificación de permiso centralizada
     const canManageRubros = hasPermission('gestionar_rubros');
 
+    const navigate = useNavigate();
+    const modal = useModal();
+
     // Manejador de eliminación con confirmación
     const handleDelete = async (rubroId, rubroNombre) => {
-        // En lugar de window.confirm, usarías un modal personalizado en una app real.
-        // Pero para ser runnable, usamos window.confirm.
-        if (window.confirm(`¿Estás seguro de eliminar el rubro: "${rubroNombre}"? Esta acción es irreversible.`)) {
-            const result = await deleteRubro(rubroId);
-            if (result.success) {
-                console.log(result.message); 
-            } else {
-                console.error(result.message);
-                // Aquí se podría mostrar un toast o alertar al usuario
-                alert(`Error al eliminar: ${result.message}`);
-            }
+        const ok = await modal.confirm({ title: 'Confirmar eliminación', message: `¿Estás seguro de eliminar el rubro: "${rubroNombre}"? Esta acción es irreversible.`, okVariant: 'danger', cancelVariant: 'primary' })
+        if (!ok) return
+
+        const result = await deleteRubro(rubroId);
+        if (result.success) {
+            console.log(result.message);
+        } else {
+            console.error(result.message);
+            await modal.alert({ title: 'Error', message: `Error al eliminar: ${result.message}` })
         }
     };
     
@@ -69,7 +69,7 @@ const RubrosPage = () => {
                 {/* Botón de Creación */}
                 {canManageRubros && (
                     <button
-                        onClick={openCreateModal}
+                        onClick={() => navigate('/dashboard/gestion-empresas/rubros/create')}
                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg transition-colors transform hover:scale-[1.02] active:scale-95 disabled:opacity-70"
                         title="Crear Nuevo Rubro"
                     >
@@ -94,14 +94,13 @@ const RubrosPage = () => {
                 {/* Tabla de Rubros */}
                 <RubroTable 
                     rubros={rubros} 
-                    onEdit={openEditModal} 
+                    onEdit={(r) => navigate(`/dashboard/gestion-empresas/rubros/${r.id}/edit`)}
+                    onView={(id) => navigate(`/dashboard/gestion-empresas/rubros/${id}`)}
                     onDelete={handleDelete}
                     isSubmitting={isSubmitting} // Pasa el estado de envío para deshabilitar botones
                 />
             </div>
             
-            {/* Modal de Creación/Edición */}
-            <RubroFormModal />
         </div>
     );
 };

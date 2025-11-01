@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 // También se asume que se usa la instancia exportada del servicio directamente.
 import EmpresasService from '@/services/GestionEmpresas/Empresas/EmpresasService';
 import axios from 'axios'; // Se mantiene el import de axios por si se usa en otro lugar
+import { useModal } from '@/context/ModalContext'
 
 /**
  * Hook personalizado para gestionar la lógica de la página de listado de Empresas.
@@ -19,6 +20,7 @@ const useEmpresas = () => {
 
     // Corrección: El servicio se exportó como una INSTANCIA, se usa directamente.
     const service = EmpresasService; 
+    const modal = useModal()
 
     const fetchEmpresas = useCallback(async (page = 1, search = '') => {
         setIsLoading(true);
@@ -103,24 +105,97 @@ const useEmpresas = () => {
      * @param {number} id - ID de la empresa a eliminar.
      */
     const handleDeleteEmpresa = async (id) => {
-        // Usamos una función de confirmación alternativa si window.confirm no está disponible
-        const isConfirmed = window.confirm ? window.confirm('¿Está seguro de que desea eliminar esta empresa? Esto no se puede deshacer.') : true;
-        
-        if (!isConfirmed) {
-            return;
-        }
+        const isConfirmed = await modal.confirm({
+            title: 'Confirmar eliminación',
+            message: '¿Está seguro de que desea eliminar esta empresa? Esto no se puede deshacer.',
+            okVariant: 'danger',
+            cancelVariant: 'primary',
+            iconType: 'warning'
+        })
+
+        if (!isConfirmed) return;
 
         try {
             await service.deleteEmpresa(id);
-            // Mostrar un mensaje de éxito (esto se manejaría mejor con un contexto de notificaciones)
-            alert('Empresa eliminada con éxito.'); 
-            
-            // Recargar la lista, volviendo a la página 1 si es necesario, pero intentaremos mantener la página actual.
-            fetchEmpresas(currentPage, searchTerm); 
+            await modal.alert({ title: 'Éxito', message: 'Empresa eliminada con éxito.', iconType: 'success' }); 
+            fetchEmpresas(currentPage, searchTerm);
+            return;
         } catch (err) {
-            // Asegura que el error es legible
-            setError(err.message || 'Ocurrió un error al intentar eliminar la empresa.');
+            // Si el backend devuelve 409 => tiene dependencias
+            const status = err.response?.status
+            if (status === 409) {
+                const details = err.response.data?.details || {}
+                const message = (
+                    <div>
+                        <p className="mb-2">{err.response.data?.message || 'La empresa tiene datos asociados que impiden su eliminación.'}</p>
+                        <ul className="text-sm text-gray-600 list-disc list-inside">
+                            {Object.entries(details).map(([k, v]) => (
+                                <li key={k}><strong>{k.replace(/_/g, ' ')}:</strong> {v}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )
+
+                const choice = await modal.dialog({
+                    title: 'No se puede eliminar la empresa',
+                    message,
+                    options: [
+                        { key: 'disable', label: 'Desactivar empresa', variant: 'primary' },
+                        { key: 'force', label: 'Eliminar permanentemente', variant: 'danger' },
+                        { key: 'cancel', label: 'Cancelar', variant: 'default' }
+                    ],
+                    iconType: 'warning'
+                })
+
+                if (!choice || choice === 'cancel') return
+
+                if (choice === 'disable') {
+                    const doDisable = await modal.confirm({ title: 'Desactivar empresa', message: '¿Desea desactivar la empresa ahora?', okVariant: 'primary', cancelVariant: 'default', iconType: 'info' })
+                    if (!doDisable) return
+
+                    try {
+                        await service.disableEmpresa(id, 'disable')
+                        await modal.alert({ title: 'Empresa desactivada', message: 'La empresa fue desactivada correctamente.', iconType: 'success' })
+                        fetchEmpresas(currentPage, searchTerm)
+                    } catch (e) {
+                        console.error('Error desactivando empresa', e)
+                        await modal.alert({ title: 'Error', message: e.response?.data?.message || e.message || 'Error al desactivar la empresa.' })
+                    }
+                    return
+                }
+
+                if (choice === 'force') {
+                    // 1) comprobar si la empresa está activa
+                    try {
+                        const emp = await service.getEmpresa(id)
+                        if (emp.activo) {
+                            const disableNow = await modal.confirm({ title: 'Empresa activa', message: 'La empresa está activa. Debe desactivarla antes de un borrado forzado. ¿Desea desactivarla ahora?', okVariant: 'primary', cancelVariant: 'default', iconType: 'warning' })
+                            if (!disableNow) return
+                            await service.disableEmpresa(id, 'disable')
+                            await modal.alert({ title: 'Empresa desactivada', message: 'Empresa desactivada. Procediendo a borrado forzado.', iconType: 'info' })
+                        }
+
+                        // 2) ejecutar borrado forzado
+                        try {
+                            await service.deleteEmpresaForce(id, true)
+                            await modal.alert({ title: 'Eliminada', message: 'Empresa eliminada permanentemente.', iconType: 'success' })
+                            fetchEmpresas(currentPage, searchTerm)
+                        } catch (e) {
+                            console.error('Error en borrado forzado', e)
+                            await modal.alert({ title: 'Error', message: e.response?.data?.message || e.message || 'Error al intentar borrado forzado.' })
+                        }
+                    } catch (e) {
+                        console.error('Error comprobando empresa', e)
+                        await modal.alert({ title: 'Error', message: e.response?.data?.message || e.message || 'No se pudo verificar el estado de la empresa.' })
+                    }
+                }
+                return
+            }
+
+            // Otros errores
             console.error('Error de eliminación:', err);
+            await modal.alert({ title: 'Error', message: err.response?.data?.message || err.message || 'Ocurrió un error al intentar eliminar la empresa.' })
+            setError(err.message || 'Ocurrió un error al intentar eliminar la empresa.');
         }
     };
 

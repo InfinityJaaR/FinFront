@@ -34,8 +34,15 @@ class RatioDefinicionService {
             // El controlador retorna { success: true, data: data_paginada }
             return response.data.data; 
         } catch (error) {
-            console.error('Error al obtener la lista de definiciones de ratios:', error);
-            throw error;
+            // Loguear detalle de la respuesta del servidor si existe para facilitar el debugging
+            if (error.response && error.response.data) {
+                console.error('Respuesta del servidor (ratios):', error.response.data);
+            } else {
+                console.error('Error al obtener la lista de definiciones de ratios:', error);
+            }
+            // Lanzar un Error más claro con el mensaje del servidor si está disponible
+            const serverMessage = error.response?.data?.message || error.message || 'Error en la petición';
+            throw new Error(serverMessage);
         }
     }
 

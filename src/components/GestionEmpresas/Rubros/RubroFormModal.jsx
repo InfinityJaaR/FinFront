@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Loader2, TrendingUp, AlertTriangle } from 'lucide-react';
 import { useRubros } from '@/hooks/GestionEmpresas/Rubros/useRubros'; // Importa tu hook de gestión
+import Button from '@/components/ui/Button'
 
 const RubroFormModal = () => {
     const { 
@@ -226,26 +227,15 @@ const RubroFormModal = () => {
 
                     {/* Footer del Modal (Botones) */}
                     <footer className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 rounded-b-2xl">
-                        <button
-                            type="button"
-                            onClick={closeModal}
-                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors font-medium"
-                            disabled={isSubmitting}
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold shadow-md disabled:opacity-75"
-                            disabled={isSubmitting}
-                        >
+                        <Button type="button" variant="primary" size="md" onClick={closeModal} disabled={isSubmitting}>Cancelar</Button>
+                        <Button type="submit" variant="success" size="md" disabled={isSubmitting} className="flex items-center gap-2">
                             {isSubmitting ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
                                 <Save className="h-5 w-5" />
                             )}
                             {isEditing ? 'Guardar Cambios' : 'Crear Rubro'}
-                        </button>
+                        </Button>
                     </footer>
                 </form>
             </div>

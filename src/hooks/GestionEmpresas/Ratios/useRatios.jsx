@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 // Usar alias @ para rutas desde src y corregir typo en carpeta 'GestimpEmpresas'
 import RatioDefinicionService from '@/services/GestionEmpresas/Ratios/RatioDefinicionService'; 
 import axios from 'axios'; // Se mantiene por convención
+import { useModal } from '@/context/ModalContext'
 
 /**
  * Hook personalizado para gestionar la lógica de la página de listado de Definiciones de Ratios.
@@ -18,6 +19,8 @@ const useRatios = () => {
 
     // Corrección: El servicio se exportó como una INSTANCIA, se usa directamente.
     const service = RatioDefinicionService; 
+    // Modal context for confirmations and alerts
+    const modal = useModal();
 
     const fetchRatios = useCallback(async (page = 1, search = '') => {
         setIsLoading(true);
@@ -43,8 +46,10 @@ const useRatios = () => {
                 setCurrentPage(meta.current_page);
             }
         } catch (err) {
-            setError('Error al cargar la lista de definiciones de ratios. Por favor, intente de nuevo.');
-            console.error(err);
+            // Mostrar el mensaje del servidor si el servicio lo lanza como Error
+            const msg = err.message || 'Error al cargar la lista de definiciones de ratios. Por favor, intente de nuevo.';
+            setError(msg);
+            console.error('useRatios - error:', err);
         } finally {
             setIsLoading(false);
         }
@@ -64,15 +69,18 @@ const useRatios = () => {
      * @param {number} id - ID del ratio a eliminar.
      */
     const handleDeleteRatio = async (id) => {
-        const isConfirmed = window.confirm ? window.confirm('¿Está seguro de que desea eliminar esta definición de ratio? Esto eliminará todos los valores históricos calculados.') : true;
-        
-        if (!isConfirmed) {
-            return;
-        }
+        const isConfirmed = await modal.confirm({
+            title: 'Confirmar eliminación',
+            message: '¿Está seguro de que desea eliminar esta definición de ratio? Esto eliminará todos los valores históricos calculados.',
+            okVariant: 'danger',
+            cancelVariant: 'primary'
+        });
+
+        if (!isConfirmed) return;
 
         try {
             await service.deleteRatio(id);
-            alert('Definición de Ratio eliminada con éxito.'); 
+            await modal.alert({ title: 'Éxito', message: 'Definición de Ratio eliminada con éxito.' });
             
             // Recargar la lista
             fetchRatios(currentPage, searchTerm); 

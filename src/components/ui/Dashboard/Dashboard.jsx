@@ -84,21 +84,21 @@ const FinancialDashboard = ({
     {
       icon: TrendingUp, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Rubros",
-      href: "/dashboard/rubros",
+      href: "/dashboard/gestion-empresas/rubros",
       permissions: ["gestionar_rubros"],
       roles: ["Administrador"]
     },
     {
       icon: Wallet, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Empresas",
-      href: "/dashboard/empresas",
+      href: "/dashboard/gestion-empresas/empresas",
       permissions: ["gestionar_empresas"],
       roles: ["Administrador"]
     },
     {
       icon: CreditCard, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Ratios",
-      href: "/dashboard/definicion-ratios",
+      href: "/dashboard/gestion-empresas/definicion-ratios",
       permissions: ["gestionar_ratios_definicion"],
       roles: ["Administrador"]
     },

@@ -27,7 +27,7 @@ class RubroService {
             const response = await axios.get(RUBROS_API_URL, {
                 headers: getAuthHeaders(),
             });
-            // El controlador retorna directamente la colección de rubros
+            // El controlador retorna directamente la colección de rubros (array)
             return response.data;
         } catch (error) {
             console.error('Error al obtener todos los rubros:', error);
