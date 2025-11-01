@@ -9,7 +9,7 @@ export const ModalProvider = ({ children }) => {
 
   const close = useCallback(() => setModalState({ open: false }), [])
 
-  const alert = useCallback(({ title = 'Aviso', message = '' } = {}) => {
+  const alert = useCallback(({ title = 'Aviso', message = '', iconType = 'info' } = {}) => {
     return new Promise((resolve) => {
       const onClose = () => {
         setModalState({ open: false })
@@ -18,15 +18,16 @@ export const ModalProvider = ({ children }) => {
 
       setModalState({
         open: true,
-        type: 'alert',
+        kind: 'alert',
         title,
         message,
-        onClose
+        onClose,
+        iconType
       })
     })
   }, [])
 
-  const confirm = useCallback(({ title = 'Confirmar', message = '', okVariant = 'primary', cancelVariant = 'default' } = {}) => {
+  const confirm = useCallback(({ title = 'Confirmar', message = '', okVariant = 'primary', cancelVariant = 'default', iconType = 'warning' } = {}) => {
     return new Promise((resolve) => {
       const handleOk = () => {
         setModalState({ open: false })
@@ -39,18 +40,34 @@ export const ModalProvider = ({ children }) => {
 
       setModalState({
         open: true,
-        type: 'confirm',
+        kind: 'confirm',
         title,
         message,
         handleOk,
         handleCancel,
         okVariant,
-        cancelVariant
+        cancelVariant,
+        iconType
       })
     })
   }, [])
 
-  const value = { alert, confirm, close }
+  // dialog: show a modal with multiple custom options and return the selected key
+  const dialog = useCallback(({ title = '', message = '', options = [], iconType = 'warning' } = {}) => {
+    return new Promise((resolve) => {
+      setModalState({
+        open: true,
+        kind: 'dialog',
+        title,
+        message,
+        options,
+        resolve,
+        iconType
+      })
+    })
+  }, [])
+
+  const value = { alert, confirm, dialog, close }
 
   return (
     <ModalContext.Provider value={value}>
@@ -59,15 +76,24 @@ export const ModalProvider = ({ children }) => {
       <Modal
         isOpen={modalState.open}
         title={modalState.title}
+        type={modalState.iconType}
         onClose={() => modalState.onClose ? modalState.onClose() : setModalState({ open: false })}
         footer={
-          modalState.open && modalState.type === 'confirm' ? (
+          modalState.open && modalState.kind === 'confirm' ? (
             <>
               <Button variant={modalState.cancelVariant || 'default'} size="md" onClick={modalState.handleCancel}>Cancelar</Button>
               <Button variant={modalState.okVariant || 'primary'} size="md" onClick={modalState.handleOk}>Aceptar</Button>
             </>
-          ) : modalState.open && modalState.type === 'alert' ? (
+          ) : modalState.open && modalState.kind === 'alert' ? (
             <Button variant="primary" size="md" onClick={modalState.onClose || (() => setModalState({ open: false }))}>OK</Button>
+          ) : modalState.open && modalState.kind === 'dialog' ? (
+            <div className="flex items-center justify-center space-x-3">
+              {modalState.options && modalState.options.map(opt => (
+                <Button key={opt.key} variant={opt.variant || 'default'} size="md" onClick={() => { setModalState({ open: false }); modalState.resolve && modalState.resolve(opt.key); }}>
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
           ) : null
         }
       >

@@ -123,19 +123,48 @@ class EmpresaService {
      */
     async deleteEmpresa(id) {
         try {
-            // El controlador retorna 200 con un mensaje de éxito, o 500 si hay dependencias (FK).
+            // Nota: Esta función realiza un DELETE simple (sin force). Para borrado forzado usar deleteEmpresaForce
             await axios.delete(`${EMPRESAS_API_URL}/${id}`, {
                 headers: getAuthHeaders(),
             });
-            // Retorna un objeto o vacío si la eliminación fue exitosa (200 OK)
             return { success: true, message: "Empresa eliminada exitosamente." };
         } catch (error) {
             console.error(`Error al eliminar la empresa con ID ${id}:`, error);
-            // Captura el error 500 (o 409 si lo implementaste) si hay registros asociados
-            if (error.response && error.response.status === 500) {
-                 // Aquí relanzamos un error con un mensaje más amigable para el frontend
-                throw new Error(error.response.data.message || 'No se pudo eliminar la empresa debido a datos asociados (cuentas, estados, etc.).');
-            }
+            // Relanzar el error original para que el frontend pueda inspeccionar status/details
+            throw error;
+        }
+    }
+
+    /**
+     * Eliminar una empresa con opción de borrado forzado.
+     * @param {number} id
+     * @param {boolean} force
+     */
+    async deleteEmpresaForce(id, force = false) {
+        try {
+            const response = await axios.delete(`${EMPRESAS_API_URL}/${id}`, {
+                headers: getAuthHeaders(),
+                params: force ? { force: true } : {}
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Desactivar / Activar empresa
+     * PATCH /api/empresas/{id}/disable?action=enable|disable
+     */
+    async disableEmpresa(id, action = 'disable') {
+        try {
+            const response = await axios.patch(`${EMPRESAS_API_URL}/${id}/disable`, {}, {
+                headers: getAuthHeaders(),
+                params: { action }
+            });
+            return response.data;
+        } catch (error) {
+            console.error(`Error al cambiar estado de la empresa ${id}:`, error);
             throw error;
         }
     }
