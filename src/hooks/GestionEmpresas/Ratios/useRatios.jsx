@@ -71,7 +71,9 @@ const useRatios = () => {
     const handleDeleteRatio = async (id) => {
         const isConfirmed = await modal.confirm({
             title: 'Confirmar eliminación',
-            message: '¿Está seguro de que desea eliminar esta definición de ratio? Esto eliminará todos los valores históricos calculados.'
+            message: '¿Está seguro de que desea eliminar esta definición de ratio? Esto eliminará todos los valores históricos calculados.',
+            okVariant: 'danger',
+            cancelVariant: 'primary'
         });
 
         if (!isConfirmed) return;

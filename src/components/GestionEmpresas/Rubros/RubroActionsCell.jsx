@@ -22,35 +22,41 @@ const RubroActionsCell = ({ rubro, onView, onEdit, onDelete, isSubmitting }) => 
     return (
         <div className="flex justify-center space-x-2">
             {/* Botón Ver (Añadido para consistencia) */}
-                        <Button onClick={() => onView(rubro.id)} variant="default" size="icon" title="Ver detalles del Rubro" aria-label="Ver detalles">
-                            <Eye className="h-5 w-5" />
-                        </Button>
+            <Button
+                onClick={() => onView(rubro.id)}
+                variant="action"
+                size="icon"
+                intent="view"
+                icon={<Eye className="h-5 w-5" />}
+                title="Ver detalles del Rubro"
+                aria-label="Ver detalles"
+            />
 
             {/* Botón Editar */}
-                        <Button
-                            onClick={() => onEdit(rubro)}
-                            disabled={!canManage || isSubmitting}
-                            variant="default"
-                            size="icon"
-                            title="Editar Rubro"
-                            aria-label="Editar"
-                            className={cn(!canManage && 'opacity-50 cursor-not-allowed')}
-                        >
-                            <Edit className="h-5 w-5" />
-                        </Button>
-            
+            <Button
+                onClick={() => onEdit(rubro)}
+                disabled={!canManage || isSubmitting}
+                variant="action"
+                size="icon"
+                intent="edit"
+                icon={<Edit className="h-5 w-5" />}
+                title="Editar Rubro"
+                aria-label="Editar"
+                className={cn(!canManage && 'opacity-50 cursor-not-allowed')}
+            />
+
             {/* Botón Eliminar */}
-                        <Button
-                            onClick={() => onDelete(rubro.id, rubro.nombre)}
-                            disabled={!canManage || isSubmitting}
-                            variant="default"
-                            size="icon"
-                            title="Eliminar Rubro"
-                            aria-label="Eliminar"
-                            className={cn((!canManage || isSubmitting) && 'opacity-50 cursor-not-allowed')}
-                        >
-                            <Trash2 className="h-5 w-5" />
-                        </Button>
+            <Button
+                onClick={() => onDelete(rubro.id, rubro.nombre)}
+                disabled={!canManage || isSubmitting}
+                variant="action"
+                size="icon"
+                intent="delete"
+                icon={<Trash2 className="h-5 w-5" />}
+                title="Eliminar Rubro"
+                aria-label="Eliminar"
+                className={cn((!canManage || isSubmitting) && 'opacity-50 cursor-not-allowed')}
+            />
         </div>
     );
 };

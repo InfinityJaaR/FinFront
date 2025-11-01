@@ -7,17 +7,11 @@ import Button from '@/components/ui/Button';
 const EmpresaActions = ({ empresa, onView, onEdit, onDelete }) => {
     return (
         <div className="flex space-x-2 justify-center">
-            <Button onClick={() => onView(empresa.id)} variant="default" size="icon" aria-label="Ver detalles">
-                <Eye size={18} />
-            </Button>
+            <Button onClick={() => onView(empresa.id)} variant="action" size="icon" intent="view" icon={<Eye size={18} />} aria-label="Ver detalles" />
 
-            <Button onClick={() => onEdit(empresa.id)} variant="default" size="icon" aria-label="Editar empresa">
-                <Edit size={18} />
-            </Button>
+            <Button onClick={() => onEdit(empresa.id)} variant="action" size="icon" intent="edit" icon={<Edit size={18} />} aria-label="Editar empresa" />
 
-            <Button onClick={() => onDelete(empresa.id)} variant="default" size="icon" aria-label="Eliminar empresa">
-                <Trash2 size={18} />
-            </Button>
+            <Button onClick={() => onDelete(empresa.id)} variant="action" size="icon" intent="delete" icon={<Trash2 size={18} />} aria-label="Eliminar empresa" />
         </div>
     );
 };

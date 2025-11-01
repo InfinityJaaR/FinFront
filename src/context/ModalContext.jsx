@@ -26,7 +26,7 @@ export const ModalProvider = ({ children }) => {
     })
   }, [])
 
-  const confirm = useCallback(({ title = 'Confirmar', message = '' } = {}) => {
+  const confirm = useCallback(({ title = 'Confirmar', message = '', okVariant = 'primary', cancelVariant = 'default' } = {}) => {
     return new Promise((resolve) => {
       const handleOk = () => {
         setModalState({ open: false })
@@ -43,7 +43,9 @@ export const ModalProvider = ({ children }) => {
         title,
         message,
         handleOk,
-        handleCancel
+        handleCancel,
+        okVariant,
+        cancelVariant
       })
     })
   }, [])
@@ -61,8 +63,8 @@ export const ModalProvider = ({ children }) => {
         footer={
           modalState.open && modalState.type === 'confirm' ? (
             <>
-              <Button variant="default" size="md" onClick={modalState.handleCancel}>Cancelar</Button>
-              <Button variant="primary" size="md" onClick={modalState.handleOk}>Aceptar</Button>
+              <Button variant={modalState.cancelVariant || 'default'} size="md" onClick={modalState.handleCancel}>Cancelar</Button>
+              <Button variant={modalState.okVariant || 'primary'} size="md" onClick={modalState.handleOk}>Aceptar</Button>
             </>
           ) : modalState.open && modalState.type === 'alert' ? (
             <Button variant="primary" size="md" onClick={modalState.onClose || (() => setModalState({ open: false }))}>OK</Button>

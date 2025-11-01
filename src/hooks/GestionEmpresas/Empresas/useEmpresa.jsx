@@ -107,7 +107,9 @@ const useEmpresas = () => {
     const handleDeleteEmpresa = async (id) => {
         const isConfirmed = await modal.confirm({
             title: 'Confirmar eliminación',
-            message: '¿Está seguro de que desea eliminar esta empresa? Esto no se puede deshacer.'
+            message: '¿Está seguro de que desea eliminar esta empresa? Esto no se puede deshacer.',
+            okVariant: 'danger',
+            cancelVariant: 'primary'
         })
 
         if (!isConfirmed) return;

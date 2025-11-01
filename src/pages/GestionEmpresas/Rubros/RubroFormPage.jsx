@@ -110,11 +110,11 @@ const RubroFormPage = () => {
         </div>
 
         <div className="flex items-center justify-end space-x-2">
-          <Button onClick={() => navigate(-1)} variant="default" size="md">Volver</Button>
+          <Button onClick={() => navigate(-1)} variant="primary" size="md">Volver</Button>
           {!isView && (
-            <button type="submit" disabled={saving} className="px-4 py-2 bg-indigo-600 text-white rounded">
+            <Button type="submit" disabled={saving} variant="success" size="md">
               {saving ? 'Guardando...' : 'Guardar'}
-            </button>
+            </Button>
           )}
         </div>
       </form>

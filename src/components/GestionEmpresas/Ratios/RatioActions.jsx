@@ -7,17 +7,11 @@ import Button from '@/components/ui/Button';
 const RatioActions = ({ ratio, onView, onEdit, onDelete }) => {
     return (
         <div className="flex space-x-2 justify-center">
-            <Button onClick={() => onView(ratio.id)} variant="default" size="icon" aria-label="Ver detalles del ratio">
-                <Eye size={18} />
-            </Button>
+            <Button onClick={() => onView(ratio.id)} variant="action" size="icon" intent="view" icon={<Eye size={18} />} aria-label="Ver detalles del ratio" />
 
-            <Button onClick={() => onEdit(ratio.id)} variant="default" size="icon" aria-label="Editar ratio">
-                <Edit size={18} />
-            </Button>
+            <Button onClick={() => onEdit(ratio.id)} variant="action" size="icon" intent="edit" icon={<Edit size={18} />} aria-label="Editar ratio" />
 
-            <Button onClick={() => onDelete(ratio.id)} variant="default" size="icon" aria-label="Eliminar ratio">
-                <Trash2 size={18} />
-            </Button>
+            <Button onClick={() => onDelete(ratio.id)} variant="action" size="icon" intent="delete" icon={<Trash2 size={18} />} aria-label="Eliminar ratio" />
         </div>
     );
 };

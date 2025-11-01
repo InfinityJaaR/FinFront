@@ -25,7 +25,7 @@ const RubrosPage = () => {
 
     // Manejador de eliminación con confirmación
     const handleDelete = async (rubroId, rubroNombre) => {
-        const ok = await modal.confirm({ title: 'Confirmar eliminación', message: `¿Estás seguro de eliminar el rubro: "${rubroNombre}"? Esta acción es irreversible.` })
+        const ok = await modal.confirm({ title: 'Confirmar eliminación', message: `¿Estás seguro de eliminar el rubro: "${rubroNombre}"? Esta acción es irreversible.`, okVariant: 'danger', cancelVariant: 'primary' })
         if (!ok) return
 
         const result = await deleteRubro(rubroId);
