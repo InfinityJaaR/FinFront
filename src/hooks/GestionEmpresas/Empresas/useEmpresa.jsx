@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 // También se asume que se usa la instancia exportada del servicio directamente.
 import EmpresasService from '@/services/GestionEmpresas/Empresas/EmpresasService';
 import axios from 'axios'; // Se mantiene el import de axios por si se usa en otro lugar
+import { useModal } from '@/context/ModalContext'
 
 /**
  * Hook personalizado para gestionar la lógica de la página de listado de Empresas.
@@ -19,6 +20,7 @@ const useEmpresas = () => {
 
     // Corrección: El servicio se exportó como una INSTANCIA, se usa directamente.
     const service = EmpresasService; 
+    const modal = useModal()
 
     const fetchEmpresas = useCallback(async (page = 1, search = '') => {
         setIsLoading(true);
@@ -103,17 +105,17 @@ const useEmpresas = () => {
      * @param {number} id - ID de la empresa a eliminar.
      */
     const handleDeleteEmpresa = async (id) => {
-        // Usamos una función de confirmación alternativa si window.confirm no está disponible
-        const isConfirmed = window.confirm ? window.confirm('¿Está seguro de que desea eliminar esta empresa? Esto no se puede deshacer.') : true;
-        
-        if (!isConfirmed) {
-            return;
-        }
+        const isConfirmed = await modal.confirm({
+            title: 'Confirmar eliminación',
+            message: '¿Está seguro de que desea eliminar esta empresa? Esto no se puede deshacer.'
+        })
+
+        if (!isConfirmed) return;
 
         try {
             await service.deleteEmpresa(id);
             // Mostrar un mensaje de éxito (esto se manejaría mejor con un contexto de notificaciones)
-            alert('Empresa eliminada con éxito.'); 
+            await modal.alert({ title: 'Éxito', message: 'Empresa eliminada con éxito.' }); 
             
             // Recargar la lista, volviendo a la página 1 si es necesario, pero intentaremos mantener la página actual.
             fetchEmpresas(currentPage, searchTerm); 

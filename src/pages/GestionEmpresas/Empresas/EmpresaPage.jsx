@@ -1,11 +1,9 @@
 import React from 'react';
 import { Plus, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 // Corrección de rutas: Añadir extensiones para asegurar la resolución
 import useEmpresas from '@/hooks/GestionEmpresas/Empresas/useEmpresa';
 import EmpresaList from '@/components/GestionEmpresas/Empresas/EmpresaList';
-// Corrección de la importación externa: Usar un hook dummy o comentario si no se define
-// Ya que 'next/router' no se resuelve, lo reemplazamos por un hook de navegación simulado
-const useRouter = () => ({ push: (path) => console.log(`Navigating to: ${path}`) });
 
 const EmpresasPage = () => {
     // Usamos el hook para obtener el estado y las funciones de acción
@@ -20,23 +18,20 @@ const EmpresasPage = () => {
         handleDeleteEmpresa,
     } = useEmpresas();
 
-    // Placeholder para la navegación
-    const router = useRouter(); 
+    // Navegación real con react-router
+    const navigate = useNavigate();
 
     // Funciones de acción de la tabla
     const handleView = (id) => {
-        alert(`Ver detalles de la empresa: ${id}`);
-        // router.push(`/empresas/${id}`);
+        navigate(`/dashboard/gestion-empresas/empresas/${id}`);
     };
 
     const handleEdit = (id) => {
-        alert(`Editar empresa: ${id}`);
-        // router.push(`/empresas/edit/${id}`);
+        navigate(`/dashboard/gestion-empresas/empresas/${id}/edit`);
     };
 
     const handleNew = () => {
-        alert('Ir a la página de creación de empresa');
-        // router.push('/empresas/create');
+        navigate('/dashboard/gestion-empresas/empresas/create');
     };
 
     return (

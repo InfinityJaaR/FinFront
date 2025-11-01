@@ -30,7 +30,8 @@ export const useRubros = () => {
         setError(null);
         try {
             const data = await RubroService.getAllRubros();
-            setRubros(data);
+            // El backend retorna un array de rubros
+            setRubros(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Error al cargar los rubros:", err);
             setError("No se pudieron cargar los rubros. Verifique la conexión o sus permisos.");
