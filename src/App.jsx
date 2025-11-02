@@ -9,6 +9,8 @@ import RubrosPage from './pages/GestionEmpresas/Rubros/RubroPage'
 import EmpresaPage from './pages/GestionEmpresas/Empresas/EmpresaPage'
 import RatiosPage from './pages/GestionEmpresas/Ratios/RatiosPage'
 import RatiosEmpresa from './pages/GestionEmpresas/Ratios/RatiosEmpresa';
+import ComparacionesInternasPage from "./pages/GestionEmpresas/Ratios/ComparacionesInternasPage";
+
 import { useParams } from 'react-router-dom';
 
 // Función para verificar autenticación leyendo de localStorage
@@ -141,8 +143,15 @@ function App() {
                 </PermissionRoute>
               }
               />
-
-
+                         
+            <Route
+              path="empresas/:empresaId/ratios/comparaciones"
+              element={
+                <PermissionRoute requiredPermissions={["ver_ratios"]}>
+                  <ComparacionesInternasPage />
+                </PermissionRoute>
+              }
+            />
 
 
             {/* Administradores y Contadores */}

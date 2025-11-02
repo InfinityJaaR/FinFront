@@ -35,3 +35,13 @@ export async function generarRatiosEmpresa(empresaId, periodoId) {
   );
   return resp.data;
 }
+
+export async function getRatiosComparar(empresaId, periodoIds = []) {
+  const params = { periodo_ids: periodoIds.join(",") };
+  const { data } = await api.get(`/empresas/${empresaId}/ratios/comparar`, { params });
+  return data; // { empresa_id, periodo_ids, periodos, ratios: [...] }
+}
+export async function getPeriodos() {
+  const { data } = await api.get("/periodos");
+  return data;
+}
