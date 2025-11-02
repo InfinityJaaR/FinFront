@@ -1,0 +1,52 @@
+.comparativos .btn {
+  border-radius: 10px !important;
+  padding: 0.5rem 0.9rem !important;
+  font-weight: 600 !important;
+  border: none !important;
+  transition: all .15s ease !important;
+}
+
+
+.comparativos .btn-primary {
+  background: #2563eb !important;  
+  color: #fff !important;
+}
+.comparativos .btn-primary:hover {
+  filter: brightness(1.05) !important;
+  box-shadow: 0 4px 12px rgba(37,99,235,.35) !important;
+}
+
+.comparativos .btn-success {
+  background: #059669 !important;  
+  color: #fff !important;
+}
+.comparativos .btn-success:hover {
+  filter: brightness(1.05) !important;
+  box-shadow: 0 4px 12px rgba(5,150,105,.35) !important;
+}
+
+
+.comparativos .btn-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 700 !important;
+  user-select: none !important;
+}
+.comparativos .btn-icon-danger {
+  background: #fee2e2 !important;   /* rojo claro */
+  border: 1px solid #fecaca !important;
+  color: #991b1b !important;
+}
+.comparativos .btn-icon-danger:hover {
+  background: #fecaca !important;
+}
+
+/* (opcional) Estilizar el select para que combine */
+.comparativos select {
+  border: 1px solid #e5e7eb !important;
+  background: #fff !important;
+}
