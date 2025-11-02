@@ -8,6 +8,8 @@ import authService from './services/auth/authService'
 import RubrosPage from './pages/GestionEmpresas/Rubros/RubroPage'
 import EmpresaPage from './pages/GestionEmpresas/Empresas/EmpresaPage'
 import RatiosPage from './pages/GestionEmpresas/Ratios/RatiosPage'
+import RatiosEmpresa from './pages/GestionEmpresas/Ratios/RatiosEmpresa';
+import { useParams } from 'react-router-dom';
 
 // Función para verificar autenticación leyendo de localStorage
 function isAuthenticated() {
@@ -60,6 +62,11 @@ function PermissionRoute({ requiredPermissions, children }) {
   }
 
   return children
+}
+
+function EmpRatiosWrapper() {
+  const { empresaId } = useParams();
+  return <RatiosEmpresa empresaId={empresaId} />;
 }
 
 function App() {
@@ -125,6 +132,17 @@ function App() {
                 </RoleRoute>
               }
             />
+
+              <Route
+              path="empresas/:empresaId/ratios"
+              element={
+                <PermissionRoute requiredPermissions={["ver_ratios"]}>
+                  <EmpRatiosWrapper />
+                </PermissionRoute>
+              }
+              />
+
+
 
 
             {/* Administradores y Contadores */}
