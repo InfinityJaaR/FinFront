@@ -1,0 +1,32 @@
+.empresa-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.btn-comparaciones {
+  background-color: #059669 !important;  /* verde */
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-comparaciones:hover {
+  background-color: #047857 !important;  /* verde más oscuro */
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-comparaciones svg {
+  stroke: white !important;
+  width: 18px !important;
+  height: 18px !important;
+}

@@ -4,6 +4,8 @@ import EmpresasService from '@/services/GestionEmpresas/Empresas/EmpresasService
 import RubroService from '@/services/GestionEmpresas/Rubros/RubroService';
 import Button from '@/components/ui/Button';
 import { useModal } from '@/context/ModalContext'
+import "./EmpresaFormPage.css";
+
 
 const EmpresaFormPage = () => {
   const { id } = useParams();
@@ -64,9 +66,22 @@ const EmpresaFormPage = () => {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">{isCreate ? 'Crear Empresa' : isEdit ? 'Editar Empresa' : 'Ver Empresa'}</h1>
-      </header>
+      <header className="mb-6 empresa-header">
+  <h1 className="text-2xl font-bold mb-3">
+    {isCreate ? 'Crear Empresa' : isEdit ? 'Editar Empresa' : 'Ver Empresa'}
+  </h1>
+
+  {isView && (
+    <button
+      onClick={() => navigate(`/dashboard/empresas/${id}/ratios/comparaciones`)}
+      className="btn-comparaciones"
+    >
+
+      Comparaciones internas
+    </button>
+  )}
+</header>
+
 
       {error && <div className="mb-4 text-red-600">{error}</div>}
 
@@ -89,14 +104,16 @@ const EmpresaFormPage = () => {
           </select>
         </div>
 
-        <div className="flex items-center justify-end space-x-2">
-          <Button onClick={() => navigate(-1)} variant="primary" size="md">Volver</Button>
-          {!isView && (
-            <Button type="submit" disabled={saving} variant="success" size="md">
-              {saving ? 'Guardando...' : 'Guardar'}
-            </Button>
-          )}
-        </div>
+            <div className="flex items-center justify-end space-x-2">
+            <Button onClick={() => navigate(-1)} variant="primary" size="md">Volver</Button>
+
+            {!isView && (
+              <Button type="submit" disabled={saving} variant="success" size="md">
+                {saving ? 'Guardando...' : 'Guardar'}
+              </Button>
+            )}
+          </div>
+
       </form>
     </div>
   );
