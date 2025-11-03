@@ -6,7 +6,7 @@ import { getPeriodos } from "../../../services/GestionEmpresas/Ratios/PeriodoSer
 
 
 export default function RatiosEmpresa({ empresaId }) {
-  const [empresaNombre, setEmpresaNombre] = useState("");
+  const [empresaNombre, setEmpresaNombre] = useState(null);
   const [periodos, setPeriodos] = useState([]);
   const [periodoId, setPeriodoId] = useState("");
   const [valores, setValores] = useState([]);
@@ -23,9 +23,9 @@ export default function RatiosEmpresa({ empresaId }) {
   EmpresaService.getEmpresa(empresaId)
     .then((data) => {
       const nombre = data?.nombre || data?.data?.nombre;
-      setEmpresaNombre(nombre || `Empresa #${empresaId}`);
+      setEmpresaNombre(nombre || null);
     })
-    .catch(() => setEmpresaNombre(`Empresa #${empresaId}`));
+    .catch(() => setEmpresaNombre(null));
 }, [empresaId]);
 
 useEffect(() => {
@@ -94,7 +94,7 @@ const formatValor = (v, code) => {
       
     <div className="p-4">
   <h2 className="text-xl font-semibold mb-3">
-    Ratios de {empresaNombre || `Empresa #${empresaId}`}
+    {empresaNombre ? `Ratios de ${empresaNombre}` : "Ratios de"}
   </h2>
 
   {/* Contenedor principal con botones a la izquierda y volver a la derecha */}

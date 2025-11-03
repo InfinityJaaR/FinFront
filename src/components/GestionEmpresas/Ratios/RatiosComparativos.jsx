@@ -6,11 +6,13 @@ import { getPeriodos } from "../../../services/GestionEmpresas/Ratios/PeriodoSer
 import RatioDefinicionService from "../../../services/GestionEmpresas/Ratios/RatioDefinicionService";
 import { getRatiosEmpresa } from "../../../services/GestionEmpresas/Ratios/RatiosEmpresaService";
 import EmpresasService from "../../../services/GestionEmpresas/Empresas/EmpresasService";
+import { useNavigate } from "react-router-dom";
+
 
 export default function RatiosComparativos({ empresaId: empresaIdProp, nombreEmpresa: nombreProp }) {
   const params = useParams();
   const empresaId = Number(empresaIdProp ?? params?.id ?? params?.empresaId);
-  const [empresaNombre, setEmpresaNombre] = useState(nombreProp || "Empresa xyz");
+  const [empresaNombre, setEmpresaNombre] = useState(nombreProp);
 
   const [periodos, setPeriodos] = useState([]);     // [{id, anio}]
   const [ratiosDefs, setRatiosDefs] = useState([]); // [{id, nombre, codigo}]
@@ -22,6 +24,7 @@ export default function RatiosComparativos({ empresaId: empresaIdProp, nombreEmp
   const [valores, setValores] = useState({});       // { [periodoId]: { [ratioId]: valor } }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   // ID seguro si el navegador no soporta crypto.randomUUID
   const safeId = () =>
@@ -160,8 +163,12 @@ export default function RatiosComparativos({ empresaId: empresaIdProp, nombreEmp
     <div className="p-4 comparativos">
       <h2 className="text-xl font-semibold mb-1">{empresaNombre}</h2>
       <p className="text-sm text-gray-600 mb-4">Comparaciones internas</p>
-
       <div className="flex items-center gap-2 mb-3">
+          <button
+                onClick={() => navigate(`/dashboard/gestion-empresas/empresas/${empresaId}`)}
+                className="btn-volver">
+            Volver
+        </button>
         <button
           className="btn btn-primary disabled:opacity-50"
           onClick={handleAddCol}
