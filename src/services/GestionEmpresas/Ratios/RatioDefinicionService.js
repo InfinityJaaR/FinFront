@@ -83,6 +83,24 @@ class RatioDefinicionService {
     }
 
     /**
+     * [aux] Obtener categorías permitidas para los ratios.
+     * GET /api/ratios/categorias
+     * @returns {Promise<Array>} Lista de categorías (strings).
+     */
+    async getCategories() {
+        try {
+            const response = await axios.get(`${url}ratios/categorias`, {
+                headers: getAuthHeaders(),
+            });
+            // Se asume que el endpoint devuelve { data: [...] } o directamente [...]
+            return response.data?.data ?? response.data ?? [];
+        } catch (error) {
+            console.error('Error al obtener categorías de ratios:', error);
+            throw error;
+        }
+    }
+
+    /**
      * [2. STORE] CREAR una nueva definición de ratio.
      * POST /api/ratios/definiciones
      * @param {Object} ratioData - Datos del nuevo ratio ({ codigo, nombre, formula, sentido, componentes[] }).
