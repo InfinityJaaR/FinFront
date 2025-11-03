@@ -11,6 +11,8 @@ import RatiosPage from './pages/GestionEmpresas/Ratios/RatiosPage'
 import RubroFormPage from './pages/GestionEmpresas/Rubros/RubroFormPage'
 import EmpresaFormPage from './pages/GestionEmpresas/Empresas/EmpresaFormPage'
 import RatioFormPage from './pages/GestionEmpresas/Ratios/RatioFormPage'
+import CatalogoPage from './pages/GestionCuentas/Catalogo'
+import NuevoCatalogoPage from './pages/GestionCuentas/NuevoCatalogo'
 import { ModalProvider } from '@/context/ModalContext'
 
 // Función para verificar autenticación leyendo de localStorage
@@ -302,6 +304,24 @@ function App() {
                 }
               />
             </Route>
+
+            <Route
+              path="catalogo-cuentas"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_catalogo_cuentas"]}>
+                  <CatalogoPage />
+                </PermissionRoute>
+              }
+            />
+
+            <Route
+              path="catalogo-cuentas/nuevo"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_catalogo_cuentas"]}>
+                  <NuevoCatalogoPage />
+                </PermissionRoute>
+              }
+            />
 
             {/* Accesible para todos */}
             <Route
