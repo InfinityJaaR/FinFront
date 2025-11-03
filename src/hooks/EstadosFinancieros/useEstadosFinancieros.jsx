@@ -87,14 +87,20 @@ export const useEstadosFinancieros = () => {
   }, [])
 
   /**
-   * Obtener un estado específico
+   * Obtener un estado específico o listar con filtros
    */
-  const obtenerEstado = useCallback(async (id) => {
+  const obtenerEstado = useCallback(async (filters) => {
     try {
       setLoading(true)
       setError(null)
-      const response = await EstadosFinancierosService.obtener(id)
-      return response
+      // Si es un número, es un ID, sino es un objeto de filtros
+      if (typeof filters === 'number') {
+        const response = await EstadosFinancierosService.obtener(filters)
+        return response
+      } else {
+        const response = await EstadosFinancierosService.listar(filters)
+        return response
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Error al obtener estado financiero')
       console.error('Error al obtener estado financiero:', err)

@@ -1,28 +1,33 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
+import { Button } from "../../components/ui/button"
 import { Plus } from "lucide-react"
-import BalanceGeneral from "@/components/EstadosFinancieros/BalanceGeneral"
-import EstadoResultado from "@/components/EstadosFinancieros/EstadoResultado"
-
-// Datos de ejemplo - reemplazar con datos reales de tu API/base de datos
-const empresas = [
-  { id: 1, nombre: "Empresa A S.A." },
-  { id: 2, nombre: "Empresa B Ltda." },
-  { id: 3, nombre: "Empresa C Corp." },
-]
-
-const años = ["2024", "2023", "2022", "2021", "2020"]
+import BalanceGeneral from "../../components/EstadosFinancieros/BalanceGeneral"
+import EstadoResultado from "../../components/EstadosFinancieros/EstadoResultado"
+import { useEstadosFinancieros } from "../../hooks/EstadosFinancieros/useEstadosFinancieros"
 
 export default function EstadosFinancierosPage() {
   const navigate = useNavigate()
-  const [empresaSeleccionada, setEmpresaSeleccionada] = useState("")
-  const [añoSeleccionado, setAñoSeleccionado] = useState("")
+  const {
+    empresas,
+    periodos,
+    loading,
+    cargarEmpresas,
+    cargarPeriodos,
+  } = useEstadosFinancieros()
 
-  const mostrarEstados = empresaSeleccionada && añoSeleccionado
+  const [empresaSeleccionada, setEmpresaSeleccionada] = useState("")
+  const [periodoSeleccionado, setPeriodoSeleccionado] = useState("")
+
+  useEffect(() => {
+    cargarEmpresas()
+    cargarPeriodos()
+  }, [])
+
+  const mostrarEstados = empresaSeleccionada && periodoSeleccionado
 
   const handleNuevoEstado = () => {
     navigate('/dashboard/estados-financieros/nuevo')
@@ -58,7 +63,7 @@ export default function EstadosFinancierosPage() {
                 <label htmlFor="empresa" className="text-sm font-medium text-foreground">
                   Empresa
                 </label>
-                <Select value={empresaSeleccionada} onValueChange={setEmpresaSeleccionada}>
+                <Select value={empresaSeleccionada} onValueChange={setEmpresaSeleccionada} disabled={loading}>
                   <SelectTrigger id="empresa" aria-label="Seleccionar empresa">
                     <SelectValue placeholder="Selecciona una empresa" />
                   </SelectTrigger>
@@ -72,19 +77,19 @@ export default function EstadosFinancierosPage() {
                 </Select>
               </div>
 
-              {/* Selector de Año */}
+              {/* Selector de Periodo */}
               <div className="space-y-2">
-                <label htmlFor="año" className="text-sm font-medium text-foreground">
-                  Año Fiscal
+                <label htmlFor="periodo" className="text-sm font-medium text-foreground">
+                  Periodo
                 </label>
-                <Select value={añoSeleccionado} onValueChange={setAñoSeleccionado}>
-                  <SelectTrigger id="año" aria-label="Seleccionar año fiscal">
-                    <SelectValue placeholder="Selecciona un año" />
+                <Select value={periodoSeleccionado} onValueChange={setPeriodoSeleccionado} disabled={loading}>
+                  <SelectTrigger id="periodo" aria-label="Seleccionar periodo">
+                    <SelectValue placeholder="Selecciona un periodo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {años.map((año) => (
-                      <SelectItem key={año} value={año}>
-                        {año}
+                    {periodos.map((periodo) => (
+                      <SelectItem key={periodo.id} value={periodo.id.toString()}>
+                        {periodo.nombre} ({periodo.año})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -103,11 +108,11 @@ export default function EstadosFinancierosPage() {
             </TabsList>
 
             <TabsContent value="balance" className="mt-6">
-              <BalanceGeneral empresaId={empresaSeleccionada} año={añoSeleccionado} />
+              <BalanceGeneral empresaId={empresaSeleccionada} periodoId={periodoSeleccionado} />
             </TabsContent>
 
             <TabsContent value="resultados" className="mt-6">
-              <EstadoResultado empresaId={empresaSeleccionada} año={añoSeleccionado} />
+              <EstadoResultado empresaId={empresaSeleccionada} periodoId={periodoSeleccionado} />
             </TabsContent>
           </Tabs>
         ) : (
@@ -115,7 +120,7 @@ export default function EstadosFinancierosPage() {
             <CardContent className="flex min-h-[400px] items-center justify-center">
               <div className="text-center">
                 <p className="text-lg text-muted-foreground">
-                  Selecciona una empresa y un año para visualizar los estados financieros
+                  Selecciona una empresa y un periodo para visualizar los estados financieros
                 </p>
               </div>
             </CardContent>
