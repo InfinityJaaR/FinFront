@@ -1,4 +1,15 @@
-import apiClient from '../apiClient'
+import axios from 'axios'
+import url from '../utils/url'
+
+const ESTADOS_API_URL = `${url}estados-financieros`
+
+/**
+ * Función auxiliar para obtener los headers de autenticación (Bearer Token)
+ */
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
 
 const EstadosFinancierosService = {
   /**
@@ -6,7 +17,9 @@ const EstadosFinancierosService = {
    */
   obtenerEmpresas: async () => {
     try {
-      const response = await apiClient.get('/estados-financieros/empresas')
+      const response = await axios.get(`${ESTADOS_API_URL}/empresas`, {
+        headers: getAuthHeaders(),
+      })
       return response.data
     } catch (error) {
       console.error('Error al obtener empresas:', error)
@@ -19,7 +32,9 @@ const EstadosFinancierosService = {
    */
   obtenerPeriodos: async () => {
     try {
-      const response = await apiClient.get('/estados-financieros/periodos')
+      const response = await axios.get(`${ESTADOS_API_URL}/periodos`, {
+        headers: getAuthHeaders(),
+      })
       return response.data
     } catch (error) {
       console.error('Error al obtener periodos:', error)
@@ -34,15 +49,17 @@ const EstadosFinancierosService = {
    */
   descargarPlantilla: async (empresaId, tipo) => {
     try {
-      const response = await apiClient.get('/estados-financieros/plantilla', {
+      const response = await axios.get(`${ESTADOS_API_URL}/plantilla`, {
         params: { empresa_id: empresaId, tipo },
+        headers: getAuthHeaders(),
         responseType: 'blob'
       })
       
       // Crear enlace de descarga
-      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const blob = new Blob([response.data], { type: 'text/csv' })
+      const downloadUrl = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = url
+      link.href = downloadUrl
       
       // Extraer nombre del archivo del header Content-Disposition si existe
       const contentDisposition = response.headers['content-disposition']
@@ -59,7 +76,7 @@ const EstadosFinancierosService = {
       document.body.appendChild(link)
       link.click()
       link.remove()
-      window.URL.revokeObjectURL(url)
+      window.URL.revokeObjectURL(downloadUrl)
       
       return { success: true, message: 'Plantilla descargada exitosamente' }
     } catch (error) {
@@ -74,7 +91,10 @@ const EstadosFinancierosService = {
    */
   listar: async (filters = {}) => {
     try {
-      const response = await apiClient.get('/estados-financieros', { params: filters })
+      const response = await axios.get(ESTADOS_API_URL, { 
+        params: filters,
+        headers: getAuthHeaders(),
+      })
       return response.data
     } catch (error) {
       console.error('Error al listar estados financieros:', error)
@@ -88,7 +108,9 @@ const EstadosFinancierosService = {
    */
   obtener: async (id) => {
     try {
-      const response = await apiClient.get(`/estados-financieros/${id}`)
+      const response = await axios.get(`${ESTADOS_API_URL}/${id}`, {
+        headers: getAuthHeaders(),
+      })
       return response.data
     } catch (error) {
       console.error('Error al obtener estado financiero:', error)
@@ -102,7 +124,9 @@ const EstadosFinancierosService = {
    */
   crear: async (data) => {
     try {
-      const response = await apiClient.post('/estados-financieros', data)
+      const response = await axios.post(ESTADOS_API_URL, data, {
+        headers: getAuthHeaders(),
+      })
       return response.data
     } catch (error) {
       console.error('Error al crear estado financiero:', error)
@@ -117,7 +141,9 @@ const EstadosFinancierosService = {
    */
   actualizar: async (id, data) => {
     try {
-      const response = await apiClient.put(`/estados-financieros/${id}`, data)
+      const response = await axios.put(`${ESTADOS_API_URL}/${id}`, data, {
+        headers: getAuthHeaders(),
+      })
       return response.data
     } catch (error) {
       console.error('Error al actualizar estado financiero:', error)
@@ -131,7 +157,9 @@ const EstadosFinancierosService = {
    */
   eliminar: async (id) => {
     try {
-      const response = await apiClient.delete(`/estados-financieros/${id}`)
+      const response = await axios.delete(`${ESTADOS_API_URL}/${id}`, {
+        headers: getAuthHeaders(),
+      })
       return response.data
     } catch (error) {
       console.error('Error al eliminar estado financiero:', error)
