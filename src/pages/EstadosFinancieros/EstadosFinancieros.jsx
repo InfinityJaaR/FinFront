@@ -1,11 +1,12 @@
-"use client"
-
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
 import BalanceGeneral from "@/components/EstadosFinancieros/BalanceGeneral"
-import EstadoResultados from "@/components/EstadosFinancieros/EstadoResultado"
+import EstadoResultado from "@/components/EstadosFinancieros/EstadoResultado"
 
 // Datos de ejemplo - reemplazar con datos reales de tu API/base de datos
 const empresas = [
@@ -17,18 +18,31 @@ const empresas = [
 const años = ["2024", "2023", "2022", "2021", "2020"]
 
 export default function EstadosFinancierosPage() {
+  const navigate = useNavigate()
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState("")
   const [añoSeleccionado, setAñoSeleccionado] = useState("")
 
   const mostrarEstados = empresaSeleccionada && añoSeleccionado
 
+  const handleNuevoEstado = () => {
+    navigate('/dashboard/estados-financieros/nuevo')
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Estados Financieros</h1>
-          <p className="text-muted-foreground">Consulta el Balance General y Estado de Resultados por empresa y año</p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Estados Financieros</h1>
+            <p className="text-muted-foreground">
+              Consulta el Balance General y Estado de Resultados por empresa y año
+            </p>
+          </div>
+          <Button size="lg" className="gap-2" onClick={handleNuevoEstado}>
+            <Plus className="h-5 w-5" />
+            Nuevo Estado
+          </Button>
         </div>
 
         {/* Filtros */}
@@ -93,7 +107,7 @@ export default function EstadosFinancierosPage() {
             </TabsContent>
 
             <TabsContent value="resultados" className="mt-6">
-              <EstadoResultados empresaId={empresaSeleccionada} año={añoSeleccionado} />
+              <EstadoResultado empresaId={empresaSeleccionada} año={añoSeleccionado} />
             </TabsContent>
           </Tabs>
         ) : (
