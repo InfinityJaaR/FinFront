@@ -2,6 +2,8 @@ import React from 'react';
 // Corrección de la importación: Asegurar que se puede resolver la ruta
 import EmpresaActions from './EmpresaActions.jsx'; 
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
 
 /**
  * Componente que muestra la lista de empresas en formato de tabla y maneja la paginación.
@@ -82,14 +84,43 @@ const EmpresaList = ({
                                     {/* Asumimos que la relación rubro se carga en el index del backend si es necesario */}
                                     {empresa.rubro ? empresa.rubro.nombre : 'N/A'} 
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <EmpresaActions 
-                                        empresa={empresa}
-                                        onView={onView}
-                                        onEdit={onEdit}
-                                        onDelete={onDelete}
-                                    />
-                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+  <div className="flex items-center justify-center gap-2">
+    <EmpresaActions
+      empresa={empresa}
+      onView={onView}
+      onEdit={onEdit}
+      onDelete={onDelete}
+    />
+
+    {/* Botón Ratios con mismo look & feel que los otros */}
+    <Link
+      to={`/dashboard/empresas/${empresa.id}/ratios`}
+      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl
+             bg-zinc-900 text-gray-100 hover:bg-zinc-800
+             focus:outline-none focus:ring-2 focus:ring-zinc-400/40
+             transition-colors"
+      title="Ver Ratios"
+    >
+      {/* lucide-react icon opcional */}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 3v18h18" />
+        <path d="M19 9l-5 5-3-3-4 4" />
+      </svg>
+      <span >Ver Ratios</span>
+    </Link>
+  </div>
+</td>
+
                             </tr>
                         ))}
                     </tbody>

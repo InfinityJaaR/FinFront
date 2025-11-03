@@ -11,7 +11,13 @@ import RatiosPage from './pages/GestionEmpresas/Ratios/RatiosPage'
 import RubroFormPage from './pages/GestionEmpresas/Rubros/RubroFormPage'
 import EmpresaFormPage from './pages/GestionEmpresas/Empresas/EmpresaFormPage'
 import RatioFormPage from './pages/GestionEmpresas/Ratios/RatioFormPage'
+import CatalogoPage from './pages/GestionCuentas/Catalogo'
+import NuevoCatalogoPage from './pages/GestionCuentas/NuevoCatalogo'
 import { ModalProvider } from '@/context/ModalContext'
+import RatiosEmpresa from './pages/GestionEmpresas/Ratios/RatiosEmpresa';
+import ComparacionesInternasPage from "./pages/GestionEmpresas/Ratios/ComparacionesInternasPage";
+
+import { useParams } from 'react-router-dom';
 
 // Función para verificar autenticación leyendo de localStorage
 function isAuthenticated() {
@@ -64,6 +70,11 @@ function PermissionRoute({ requiredPermissions, children }) {
   }
 
   return children
+}
+
+function EmpRatiosWrapper() {
+  const { empresaId } = useParams();
+  return <RatiosEmpresa empresaId={empresaId} />;
 }
 
 function App() {
@@ -128,6 +139,24 @@ function App() {
                     <p>Solo usuarios con rol Administrador o Admin pueden ver esta página.</p>
                   </div>
                 </RoleRoute>
+              }
+            />
+
+              <Route
+              path="empresas/:empresaId/ratios"
+              element={
+                <PermissionRoute requiredPermissions={["ver_ratios"]}>
+                  <EmpRatiosWrapper />
+                </PermissionRoute>
+              }
+              />
+                         
+            <Route
+              path="empresas/:empresaId/ratios/comparaciones"
+              element={
+                <PermissionRoute requiredPermissions={["ver_ratios"]}>
+                  <ComparacionesInternasPage />
+                </PermissionRoute>
               }
             />
 
@@ -302,6 +331,24 @@ function App() {
                 }
               />
             </Route>
+
+            <Route
+              path="catalogo-cuentas"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_catalogo_cuentas"]}>
+                  <CatalogoPage />
+                </PermissionRoute>
+              }
+            />
+
+            <Route
+              path="catalogo-cuentas/nuevo"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_catalogo_cuentas"]}>
+                  <NuevoCatalogoPage />
+                </PermissionRoute>
+              }
+            />
 
             {/* Accesible para todos */}
             <Route

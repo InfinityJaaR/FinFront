@@ -105,8 +105,7 @@ const FinancialDashboard = ({
     {
       icon: Wallet,
       label: "Cuentas",
-      href: "/dashboard/accounts",
-      badge: 3,
+      href: "/dashboard/catalogo-cuentas",
       roles: ["Administrador", "Analista Financiero"], // Solo estos roles pueden ver
       // permissions: ["ver_cuentas"] // Opcional: también puedes agregar permisos
     },

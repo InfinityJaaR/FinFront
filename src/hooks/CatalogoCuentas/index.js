@@ -1,0 +1,1 @@
+export { useCatalogoCuentas } from './useCatalogoCuentas';
