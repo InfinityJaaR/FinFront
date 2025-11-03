@@ -16,6 +16,7 @@ import NuevoCatalogoPage from './pages/GestionCuentas/NuevoCatalogo'
 import { ModalProvider } from '@/context/ModalContext'
 import RatiosEmpresa from './pages/GestionEmpresas/Ratios/RatiosEmpresa';
 import ComparacionesInternasPage from "./pages/GestionEmpresas/Ratios/ComparacionesInternasPage";
+import EstadosFinancierosPage from './pages/EstadosFinancieros/EstadosFinancieros';
 
 import { useParams } from 'react-router-dom';
 
@@ -347,6 +348,14 @@ function App() {
                 <PermissionRoute requiredPermissions={["gestionar_catalogo_cuentas"]}>
                   <NuevoCatalogoPage />
                 </PermissionRoute>
+              }
+            />
+
+            {/* Estados Financieros */}
+            <Route
+              path="estados-financieros"
+              element={
+                  <EstadosFinancierosPage />
               }
             />
 
