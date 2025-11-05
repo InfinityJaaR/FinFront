@@ -2,10 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import RatioService from '@/services/GestionEmpresas/Ratios/RatioDefinicionService';
 import authService from '@/services/auth/authService'
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useModal } from '@/context/ModalContext'
 
-const defaultComponentItem = () => ({ concepto_id: '', rol: 'NUMERADOR', orden: 1, requiere_promedio: false, sentido: 1, operator: '+' });
+const defaultComponentItem = () => ({ concepto_id: '', rol: 'NUMERADOR', orden: 1, requiere_promedio: false, sentido: 1, operacion: 'ADD', factor: 1.0 });
 
 const RatioFormPage = () => {
   const { id } = useParams();
@@ -15,12 +20,14 @@ const RatioFormPage = () => {
   const isEdit = !!id && location.pathname.endsWith('/edit');
   const isView = !!id && !location.pathname.endsWith('/edit');
 
-  const [form, setForm] = useState({ codigo: '', nombre: '', formula: '', sentido: 'MAYOR_MEJOR', categoria: '', multiplicador: 1.0, is_protected: false, componentes: [defaultComponentItem(), defaultComponentItem()] });
+  const [form, setForm] = useState({ codigo: '', nombre: '', formula: '', sentido: 'MAYOR_MEJOR', categoria: '', multiplicador_numerador: '', multiplicador_denominador: '', multiplicador_resultado: 1.0, is_protected: false, componentes: [defaultComponentItem(), defaultComponentItem()] });
   const [conceptos, setConceptos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [previewEmpresa, setPreviewEmpresa] = useState('');
+  const [previewPeriodo, setPreviewPeriodo] = useState('');
   const modal = useModal();
 
   useEffect(() => {
@@ -56,8 +63,9 @@ const RatioFormPage = () => {
                 rol: pivot.rol || c.rol || 'NUMERADOR',
                 orden: pivot.orden ?? c.orden ?? 1,
                 requiere_promedio: pivot.requiere_promedio ?? c.requiere_promedio ?? false,
-                sentido: pivot.sentido ?? c.sentido ?? 1,
-                operator: pivot.operator ?? ( (pivot.sentido ?? c.sentido ?? 1) === -1 ? '-' : '+' ),
+                  sentido: pivot.sentido ?? c.sentido ?? 1,
+                  operacion: pivot.operacion ?? c.operacion ?? 'ADD',
+                  factor: pivot.factor ?? c.factor ?? 1.0,
               };
             }) : [defaultComponentItem(), defaultComponentItem()]
           };
@@ -95,7 +103,14 @@ const RatioFormPage = () => {
       if (!group.length) return '';
       return group.map((c, idx) => {
         const name = getConceptName(c.concepto_id);
-        const op = c.operator || (Number(c.sentido) === -1 ? '-' : '+');
+        // map operacion to symbol for preview
+        const mapOp = {
+          'ADD': '+',
+          'SUB': '-',
+          'MUL': '*',
+          'DIV': '/'
+        };
+        const op = mapOp[c.operacion] || (Number(c.sentido) === -1 ? '-' : '+');
         if (idx === 0) return name;
         // map × to × in display
         return `${op === '*' ? ' * ' : op === 'x' ? ' * ' : ` ${op} `}${name}`;
@@ -151,29 +166,81 @@ const RatioFormPage = () => {
       if (!c.rol) { setError(`El componente ${i + 1} debe tener un rol.`); return false; }
       if (!c.orden || Number(c.orden) < 1) { setError(`El componente ${i + 1} debe tener un orden >= 1.`); return false; }
       if (![1, -1].includes(Number(c.sentido))) { setError(`El componente ${i + 1} debe tener sentido 1 o -1.`); return false; }
+      if (!c.operacion || !['ADD','SUB','MUL','DIV'].includes(String(c.operacion))) { setError(`El componente ${i + 1} debe tener una operación válida (ADD,SUB,MUL,DIV).`); return false; }
+      if (c.factor === undefined || c.factor === null || isNaN(Number(c.factor))) { setError(`El componente ${i + 1} debe tener un factor numérico.`); return false; }
     }
+    // validar multiplicadores opcionales (si vienen, deben ser numéricos)
+    const mNum = form.multiplicador_numerador;
+    const mDen = form.multiplicador_denominador;
+    const mRes = form.multiplicador_resultado;
+    if (mNum !== '' && mNum !== null && mNum !== undefined && isNaN(Number(mNum))) { setError('Multiplicador numerador debe ser numérico.'); return false; }
+    if (mDen !== '' && mDen !== null && mDen !== undefined && isNaN(Number(mDen))) { setError('Multiplicador denominador debe ser numérico.'); return false; }
+    if (mRes !== '' && mRes !== null && mRes !== undefined && isNaN(Number(mRes))) { setError('Multiplicador resultado debe ser numérico.'); return false; }
     setError(null);
     return true;
   };
 
   const preparePayload = () => {
     // enviar: { codigo, nombre, formula, sentido, componentes: [...] }
-    return {
+    const payload = {
       codigo: form.codigo,
       nombre: form.nombre,
       formula: form.formula,
       sentido: form.sentido,
       categoria: form.categoria,
-      multiplicador: Number(form.multiplicador) || 1.0,
       is_protected: !!form.is_protected,
       componentes: (form.componentes || []).map(c => ({
         concepto_id: Number(c.concepto_id),
         rol: c.rol,
         orden: Number(c.orden),
         requiere_promedio: !!c.requiere_promedio,
-        sentido: Number(c.sentido)
+        sentido: Number(c.sentido),
+        operacion: c.operacion,
+        factor: Number(c.factor || 1.0)
       }))
     };
+
+    // multiplicadores opcionales: si el campo está vacío, omitimos la propiedad
+    if (form.multiplicador_numerador !== '' && form.multiplicador_numerador !== null && form.multiplicador_numerador !== undefined) {
+      payload.multiplicador_numerador = Number(form.multiplicador_numerador);
+    }
+    if (form.multiplicador_denominador !== '' && form.multiplicador_denominador !== null && form.multiplicador_denominador !== undefined) {
+      payload.multiplicador_denominador = Number(form.multiplicador_denominador);
+    }
+    if (form.multiplicador_resultado !== '' && form.multiplicador_resultado !== null && form.multiplicador_resultado !== undefined) {
+      payload.multiplicador_resultado = Number(form.multiplicador_resultado);
+    }
+
+    return payload;
+  };
+
+  const handlePreview = async () => {
+    if (!validateForm()) return;
+    setError(null);
+    try {
+      const payload = preparePayload();
+      // Añadir parámetros de preview (empresa/periodo) si están definidos
+      if (previewEmpresa) payload.empresa_id = previewEmpresa;
+      if (previewPeriodo) payload.periodo_id = previewPeriodo;
+
+      // Usamos siempre el endpoint dry-run para que la previsualización refleje los cambios
+      // locales (multiplicadores u otros) aunque estemos editando una definición existente.
+      const resp = await RatioService.dryRun(payload);
+
+      const data = resp?.data ?? resp;
+      // Construir mensaje legible
+      const lines = [];
+      if (data?.result !== undefined) lines.push(`Resultado: ${data.result}`);
+      if (data?.numerador !== undefined) lines.push(`Numerador: ${JSON.stringify(data.numerador)}`);
+      if (data?.denominador !== undefined) lines.push(`Denominador: ${JSON.stringify(data.denominador)}`);
+      if (data?.breakdown) lines.push(`Desglose: ${JSON.stringify(data.breakdown)}`);
+      if (data?.warnings && data.warnings.length) lines.push(`Warnings: ${data.warnings.join('; ')}`);
+
+      await modal.alert({ title: 'Vista previa', message: (<div className="text-left whitespace-pre-wrap">{lines.join('\n\n') || JSON.stringify(data)}</div>), iconType: 'info' });
+    } catch (err) {
+      console.error('Error en vista previa:', err);
+      setError(err.response?.data?.message || err.message || 'Error al generar la vista previa');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -214,19 +281,43 @@ const RatioFormPage = () => {
         <h1 className="text-2xl font-bold">{isCreate ? 'Crear Definición de Ratio' : isEdit ? 'Editar Definición de Ratio' : 'Ver Definición de Ratio'}</h1>
       </header>
 
-      {error && <div className="mb-4 text-red-600">{error}</div>}
+      {error && (
+        <div className="mb-4">
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Código</label>
-          <input name="codigo" value={form.codigo || ''} onChange={handleChange} disabled={isView} className="mt-1 block w-full border rounded px-3 py-2" />
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 md:p-6 rounded-lg shadow">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <Label>Código</Label>
+            <Input name="codigo" value={form.codigo || ''} onChange={handleChange} disabled={isView} className="mt-1" />
+          </div>
+
+          <div>
+            <Label>Categoría</Label>
+            <Select value={form.categoria || ''} onValueChange={(v) => setForm(prev => ({ ...prev, categoria: v }))} disabled={isView}>
+              <SelectTrigger className="w-full mt-1">
+                <SelectValue placeholder="-- Seleccionar --" />
+              </SelectTrigger>
+              <SelectContent>
+                {categorias.map(cat => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Nombre</Label>
+            <Input name="nombre" value={form.nombre || ''} onChange={handleChange} disabled={isView} className="mt-1" />
+          </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Nombre</label>
-          <input name="nombre" value={form.nombre || ''} onChange={handleChange} disabled={isView} className="mt-1 block w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Fórmula (previsualización)</label>
+          <Label>Fórmula (previsualización)</Label>
           <div className="mt-1 block w-full border rounded px-3 py-3 bg-gray-50 text-sm text-gray-800">
             {form.formula || '(fórmula vacía)'}
           </div>
@@ -243,96 +334,117 @@ const RatioFormPage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Componentes</label>
+          <Label className="block text-sm font-medium text-gray-700">Componentes</Label>
           <div className="mt-2 space-y-3">
             {(form.componentes || []).map((c, idx) => (
-              <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-gray-50 p-3 rounded">
-                <div className="col-span-4 flex items-center space-x-2">
-                  {/* operador (solo para preview) */}
-                  <div className="w-16">
-                    <label className="text-xs text-gray-600">Op</label>
-                    <select disabled={isView} value={c.operator} onChange={(e) => updateComponent(idx, 'operator', e.target.value)} className="mt-1 block w-full border rounded px-2 py-1">
-                      <option value="+">+</option>
-                      <option value="-">-</option>
-                      <option value="*">×</option>
-                    </select>
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-xs text-gray-600">Concepto</label>
-                    <select disabled={isView} value={c.concepto_id} onChange={(e) => updateComponent(idx, 'concepto_id', e.target.value)} className="mt-1 block w-full border rounded px-2 py-1">
-                      <option value="">-- Seleccionar --</option>
+              <div key={idx} className="bg-gray-50 p-3 rounded grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+                <div className="md:col-span-3">
+                  <Label className="text-xs">Oper.</Label>
+                  <Select value={c.operacion || ''} onValueChange={(v) => updateComponent(idx, 'operacion', v)} disabled={isView}>
+                    <SelectTrigger className="w-full mt-1">
+                      <SelectValue placeholder="--" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ADD">ADD (+)</SelectItem>
+                      <SelectItem value="SUB">SUB (-)</SelectItem>
+                      <SelectItem value="MUL">MUL (*)</SelectItem>
+                      <SelectItem value="DIV">DIV (/)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="md:col-span-4">
+                  <Label className="text-xs">Concepto</Label>
+                  <Select value={c.concepto_id ? String(c.concepto_id) : ''} onValueChange={(v) => updateComponent(idx, 'concepto_id', v)} disabled={isView}>
+                    <SelectTrigger className="w-full mt-1">
+                      <SelectValue placeholder="-- Seleccionar --" />
+                    </SelectTrigger>
+                    <SelectContent>
                       {conceptos.map(con => (
-                        <option key={con.id} value={con.id}>{con.nombre_concepto || con.nombre || con.label || con.nombre_concepto}</option>
+                        <SelectItem key={con.id} value={String(con.id)}>{con.codigo ? `${con.codigo} - ${con.nombre_concepto || con.nombre}` : (con.nombre_concepto || con.nombre)}</SelectItem>
                       ))}
-                    </select>
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="col-span-2">
-                  <label className="text-xs text-gray-600">Rol</label>
-                  <select disabled={isView} value={c.rol} onChange={(e) => updateComponent(idx, 'rol', e.target.value)} className="mt-1 block w-full border rounded px-2 py-1">
-                    <option value="NUMERADOR">NUMERADOR</option>
-                    <option value="DENOMINADOR">DENOMINADOR</option>
-                    <option value="OPERANDO">OPERANDO</option>
-                  </select>
+
+                <div className="md:col-span-2">
+                  <Label className="text-xs">Rol</Label>
+                  <Select value={c.rol || 'NUMERADOR'} onValueChange={(v) => updateComponent(idx, 'rol', v)} disabled={isView}>
+                    <SelectTrigger className="w-full mt-1">
+                      <SelectValue placeholder="Rol" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NUMERADOR">NUMERADOR</SelectItem>
+                      <SelectItem value="DENOMINADOR">DENOMINADOR</SelectItem>
+                      <SelectItem value="OPERANDO">OPERANDO</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="col-span-1">
-                  <label className="text-xs text-gray-600">Orden</label>
-                  <input disabled={isView} type="number" min="1" value={c.orden} onChange={(e) => updateComponent(idx, 'orden', e.target.value)} className="mt-1 block w-full border rounded px-2 py-1" />
+
+                <div className="md:col-span-1">
+                  <Label className="text-xs">Orden</Label>
+                  <Input disabled={isView} type="number" min="1" value={c.orden} onChange={(e) => updateComponent(idx, 'orden', e.target.value)} className="mt-1" />
                 </div>
-                <div className="col-span-2">
-                  <label className="text-xs text-gray-600">Promedio</label>
-                  <div className="mt-1">
-                    <label className="inline-flex items-center">
-                      <input disabled={isView} type="checkbox" checked={!!c.requiere_promedio} onChange={(e) => updateComponent(idx, 'requiere_promedio', e.target.checked)} className="form-checkbox" />
-                      <span className="ml-2 text-sm text-gray-700">Requiere promedio</span>
-                    </label>
-                  </div>
+
+                <div className="md:col-span-1">
+                  <Label className="text-xs">Sentido</Label>
+                  <Select value={String(c.sentido)} onValueChange={(v) => updateComponent(idx, 'sentido', v)} disabled={isView}>
+                    <SelectTrigger className="w-full mt-1">
+                      <SelectValue placeholder="" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={String(1)}>1</SelectItem>
+                      <SelectItem value={String(-1)}>-1</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="col-span-1">
-                  <label className="text-xs text-gray-600">Sentido</label>
-                  <select disabled={isView} value={c.sentido} onChange={(e) => updateComponent(idx, 'sentido', e.target.value)} className="mt-1 block w-full border rounded px-2 py-1">
-                    <option value={1}>1</option>
-                    <option value={-1}>-1</option>
-                  </select>
+
+                <div className="md:col-span-1">
+                  <Label className="text-xs">Factor</Label>
+                  <Input disabled={isView} type="number" step="0.01" value={c.factor} onChange={(e) => updateComponent(idx, 'factor', e.target.value)} className="mt-1" />
                 </div>
-                <div className="col-span-2 flex justify-end">
+
+                <div className="md:col-span-1 flex md:justify-end mt-2 md:mt-0">
                   {!isView && (
-                    <Button variant="danger" size="sm" onClick={() => removeComponent(idx)}>Eliminar</Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => removeComponent(idx)}>Eliminar</Button>
                   )}
                 </div>
               </div>
             ))}
           </div>
+
           {!isView && (
             <div className="mt-3">
-              <Button variant="primary" size="sm" onClick={addComponent}>Agregar componente</Button>
+              <Button type="button" variant="primary" size="sm" onClick={addComponent}>Agregar componente</Button>
             </div>
           )}
         </div>
 
         <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-6">
-            <label className="block text-sm font-medium text-gray-700">Categoría</label>
-            <select name="categoria" value={form.categoria} onChange={handleChange} disabled={isView} className="mt-1 block w-full border rounded px-3 py-2">
-              <option value="">-- Seleccionar --</option>
-              {categorias.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+          <div className="col-span-12 md:col-span-4">
+            <Label>Multiplicador numerador</Label>
+            <Input name="multiplicador_numerador" value={form.multiplicador_numerador ?? ''} onChange={(e) => setForm(prev => ({ ...prev, multiplicador_numerador: e.target.value }))} disabled={isView} type="number" step="0.01" className="mt-1" placeholder="ej. 1.0" />
+            <p className="text-xs text-gray-500 mt-1">Escala el numerador (ej. 100 para transformar a % sólo el numerador).</p>
           </div>
-          <div className="col-span-3">
-            <label className="block text-sm font-medium text-gray-700">Multiplicador</label>
-            <input name="multiplicador" value={form.multiplicador} onChange={handleChange} disabled={isView} type="number" step="0.01" className="mt-1 block w-full border rounded px-3 py-2" />
+          <div className="col-span-12 md:col-span-4">
+            <Label>Multiplicador denominador</Label>
+            <Input name="multiplicador_denominador" value={form.multiplicador_denominador ?? ''} onChange={(e) => setForm(prev => ({ ...prev, multiplicador_denominador: e.target.value }))} disabled={isView} type="number" step="0.01" className="mt-1" placeholder="ej. 1.0" />
+            <p className="text-xs text-gray-500 mt-1">Escala el denominador.</p>
           </div>
-          <div className="col-span-3 flex items-end justify-end">
+          <div className="col-span-12 md:col-span-4 flex flex-col justify-end">
+            <Label>Multiplicador resultado</Label>
+            <Input name="multiplicador_resultado" value={form.multiplicador_resultado ?? ''} onChange={(e) => setForm(prev => ({ ...prev, multiplicador_resultado: e.target.value }))} disabled={isView} type="number" step="0.01" className="mt-1" placeholder="ej. 100" />
+            <p className="text-xs text-gray-500 mt-1">Factor aplicado al resultado final (p.ej. 100 para %). Borra para enviar null/omitir.</p>
+          </div>
+          <div className="col-span-12 flex items-end justify-end">
             <label className="inline-flex items-center">
-              <input name="is_protected" type="checkbox" checked={!!form.is_protected} onChange={(e) => setForm(prev => ({ ...prev, is_protected: e.target.checked }))} disabled={isView} className="form-checkbox" />
+              <Checkbox checked={!!form.is_protected} onCheckedChange={(v) => setForm(prev => ({ ...prev, is_protected: !!v }))} disabled={isView} />
               <span className="ml-2 text-sm text-gray-700">Protegida</span>
             </label>
           </div>
 
           <div className="col-span-12 flex items-center justify-end space-x-2">
-            <Button onClick={() => navigate(-1)} variant="primary" size="md">Volver</Button>
+            <Button type="button" onClick={() => navigate(-1)} variant="primary" size="md">Volver</Button>
             {!isView && ( (authService.hasPermission && authService.hasPermission('gestionar_ratios_definicion')) || (authService.getUserRole && authService.getUserRole() === 'Administrador') ) && (
               <Button type="submit" disabled={saving} variant="success" size="md">
                 {saving ? 'Guardando...' : 'Guardar'}

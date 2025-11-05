@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Loader2, TrendingUp, AlertTriangle } from 'lucide-react';
+import { X, Save, Loader2, TrendingUp } from 'lucide-react';
 import { useRubros } from '@/hooks/GestionEmpresas/Rubros/useRubros'; // Importa tu hook de gestión
-import Button from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 
 const RubroFormModal = () => {
     const { 
@@ -99,18 +102,20 @@ const RubroFormModal = () => {
                     <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                         
                         {/* Mensaje de API (Éxito o Error global) */}
-                        {(saveMessage || apiError) && (
-                            <div className={`p-3 rounded-xl flex items-start gap-3 ${saveMessage?.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-                                <p className="text-sm font-medium">{saveMessage?.text || apiError}</p>
-                            </div>
-                        )}
+                                                {(saveMessage || apiError) && (
+                                                        <div className="mb-2">
+                                                            <Alert variant={saveMessage?.type === 'success' ? 'default' : 'destructive'}>
+                                                                <AlertTitle>{saveMessage?.type === 'success' ? 'Éxito' : 'Error'}</AlertTitle>
+                                                                <AlertDescription>{saveMessage?.text || apiError}</AlertDescription>
+                                                            </Alert>
+                                                        </div>
+                                                )}
                         
                         {/* Campos Principales */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label htmlFor="codigo" className="block text-sm font-medium text-gray-700 mb-1">Código *</label>
-                                <input
+                                <Label htmlFor="codigo">Código *</Label>
+                                <Input
                                     type="text"
                                     id="codigo"
                                     name="codigo"
@@ -118,13 +123,13 @@ const RubroFormModal = () => {
                                     onChange={handleChange}
                                     required
                                     maxLength={10}
-                                    className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors ${validationErrors.codigo ? 'border-red-500' : 'border-gray-300'}`}
+                                    className={validationErrors.codigo ? 'border-red-500' : ''}
                                 />
                                 {renderError('codigo')}
                             </div>
                             <div>
-                                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
-                                <input
+                                <Label htmlFor="nombre">Nombre *</Label>
+                                <Input
                                     type="text"
                                     id="nombre"
                                     name="nombre"
@@ -132,25 +137,25 @@ const RubroFormModal = () => {
                                     onChange={handleChange}
                                     required
                                     maxLength={100}
-                                    className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors ${validationErrors.nombre ? 'border-red-500' : 'border-gray-300'}`}
+                                    className={validationErrors.nombre ? 'border-red-500' : ''}
                                 />
                                 {renderError('nombre')}
                             </div>
                         </div>
 
                         {/* Descripción */}
-                        <div>
-                            <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                            <textarea
-                                id="descripcion"
-                                name="descripcion"
-                                value={formData.descripcion || ''}
-                                onChange={handleChange}
-                                rows="3"
-                                className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors ${validationErrors.descripcion ? 'border-red-500' : 'border-gray-300'}`}
-                            ></textarea>
-                            {renderError('descripcion')}
-                        </div>
+                            <div>
+                                <Label htmlFor="descripcion">Descripción</Label>
+                                <textarea
+                                    id="descripcion"
+                                    name="descripcion"
+                                    value={formData.descripcion || ''}
+                                    onChange={handleChange}
+                                    rows="3"
+                                    className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors ${validationErrors.descripcion ? 'border-red-500' : 'border-gray-300'}`}
+                                ></textarea>
+                                {renderError('descripcion')}
+                            </div>
 
                         {/* Promedios (Ratios) - Agrupados */}
                         <div className="border border-dashed border-gray-300 p-4 rounded-xl space-y-4">
@@ -160,14 +165,14 @@ const RubroFormModal = () => {
                                 {/* Promedio Prueba Ácida */}
                                 <div>
                                     <label htmlFor="promedio_prueba_acida" className="block text-sm font-medium text-gray-700 mb-1">P. Prueba Ácida (0.00)</label>
-                                    <input
+                                    <Input
                                         type="number"
                                         step="0.01"
                                         id="promedio_prueba_acida"
                                         name="promedio_prueba_acida"
                                         value={formData.promedio_prueba_acida}
                                         onChange={handleChange}
-                                        className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors text-right ${validationErrors.promedio_prueba_acida ? 'border-red-500' : 'border-gray-300'}`}
+                                        className={`${validationErrors.promedio_prueba_acida ? 'border-red-500' : ''} text-right`}
                                         placeholder="0.00"
                                     />
                                     {renderError('promedio_prueba_acida')}
@@ -176,14 +181,14 @@ const RubroFormModal = () => {
                                 {/* Promedio Liquidez Corriente */}
                                 <div>
                                     <label htmlFor="promedio_liquidez_corriente" className="block text-sm font-medium text-gray-700 mb-1">P. Liquidez Corriente (0.00)</label>
-                                    <input
+                                    <Input
                                         type="number"
                                         step="0.01"
                                         id="promedio_liquidez_corriente"
                                         name="promedio_liquidez_corriente"
                                         value={formData.promedio_liquidez_corriente}
                                         onChange={handleChange}
-                                        className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors text-right ${validationErrors.promedio_liquidez_corriente ? 'border-red-500' : 'border-gray-300'}`}
+                                        className={`${validationErrors.promedio_liquidez_corriente ? 'border-red-500' : ''} text-right`}
                                         placeholder="0.00"
                                     />
                                     {renderError('promedio_liquidez_corriente')}
@@ -192,14 +197,14 @@ const RubroFormModal = () => {
                                 {/* Promedio Apalancamiento */}
                                 <div>
                                     <label htmlFor="promedio_apalancamiento" className="block text-sm font-medium text-gray-700 mb-1">P. Apalancamiento (0.00)</label>
-                                    <input
+                                    <Input
                                         type="number"
                                         step="0.01"
                                         id="promedio_apalancamiento"
                                         name="promedio_apalancamiento"
                                         value={formData.promedio_apalancamiento}
                                         onChange={handleChange}
-                                        className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors text-right ${validationErrors.promedio_apalancamiento ? 'border-red-500' : 'border-gray-300'}`}
+                                        className={`${validationErrors.promedio_apalancamiento ? 'border-red-500' : ''} text-right`}
                                         placeholder="0.00"
                                     />
                                     {renderError('promedio_apalancamiento')}
@@ -208,14 +213,14 @@ const RubroFormModal = () => {
                                 {/* Promedio Rentabilidad */}
                                 <div>
                                     <label htmlFor="promedio_rentabilidad" className="block text-sm font-medium text-gray-700 mb-1">P. Rentabilidad (0.00)</label>
-                                    <input
+                                    <Input
                                         type="number"
                                         step="0.01"
                                         id="promedio_rentabilidad"
                                         name="promedio_rentabilidad"
                                         value={formData.promedio_rentabilidad}
                                         onChange={handleChange}
-                                        className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors text-right ${validationErrors.promedio_rentabilidad ? 'border-red-500' : 'border-gray-300'}`}
+                                        className={`${validationErrors.promedio_rentabilidad ? 'border-red-500' : ''} text-right`}
                                         placeholder="0.00"
                                     />
                                     {renderError('promedio_rentabilidad')}

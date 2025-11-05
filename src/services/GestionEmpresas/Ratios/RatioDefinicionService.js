@@ -92,8 +92,12 @@ class RatioDefinicionService {
             const response = await axios.get(`${url}ratios/categorias`, {
                 headers: getAuthHeaders(),
             });
-            // Se asume que el endpoint devuelve { data: [...] } o directamente [...]
-            return response.data?.data ?? response.data ?? [];
+            // El backend puede devolver varias formas: { success: true, categorias: [...] }
+            // o { data: [...] } o directamente [...]. Normalizamos siempre a un array.
+            if (Array.isArray(response.data?.categorias)) return response.data.categorias;
+            if (Array.isArray(response.data?.data)) return response.data.data;
+            if (Array.isArray(response.data)) return response.data;
+            return [];
         } catch (error) {
             console.error('Error al obtener categorías de ratios:', error);
             throw error;
@@ -162,6 +166,42 @@ class RatioDefinicionService {
             throw error;
         }
     }
+
+        /**
+         * DRY-RUN: Intentar calcular una definición de ratio sin persistirla.
+         * POST /api/ratios/definiciones/dry-run
+         * @param {Object} payload - Payload con la estructura de creación (componentes incluidos)
+         * @returns {Promise<Object>} Resultado del cálculo (data)
+         */
+        async dryRun(payload) {
+            try {
+                const response = await axios.post(`${RATIOS_API_URL}/dry-run`, payload, {
+                    headers: getAuthHeaders(),
+                });
+                return response.data;
+            } catch (error) {
+                console.error('Error en dry-run de ratio:', error);
+                throw error;
+            }
+        }
+
+        /**
+         * CALCULATE: Obtener cálculo de una definición existente para empresa/periodo.
+         * GET /api/ratios/definiciones/{id}/calculate?empresa={empresaId}&periodo={periodoId}
+         */
+        async calculate(id, empresaId, periodoId) {
+            try {
+                // Backend expects empresa_id and periodo_id as query params
+                const q = `?empresa_id=${empresaId || ''}${periodoId ? `&periodo_id=${periodoId}` : ''}`;
+                const response = await axios.get(`${RATIOS_API_URL}/${id}/calculate${q}`, {
+                    headers: getAuthHeaders(),
+                });
+                return response.data;
+            } catch (error) {
+                console.error(`Error al calcular ratio id=${id}:`, error);
+                throw error;
+            }
+        }
 }
 
 export default new RatioDefinicionService();

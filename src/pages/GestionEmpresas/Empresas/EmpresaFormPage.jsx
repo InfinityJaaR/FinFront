@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import EmpresasService from '@/services/GestionEmpresas/Empresas/EmpresasService';
 import RubroService from '@/services/GestionEmpresas/Rubros/RubroService';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { useModal } from '@/context/ModalContext'
 import "./EmpresaFormPage.css";
 
@@ -83,32 +87,43 @@ const EmpresaFormPage = () => {
 </header>
 
 
-      {error && <div className="mb-4 text-red-600">{error}</div>}
+      {error && (
+        <div className="mb-4">
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Código</label>
-          <input name="codigo" value={form.codigo || ''} onChange={handleChange} disabled={isView} className="mt-1 block w-full border rounded px-3 py-2" />
+          <Label>Código</Label>
+          <Input name="codigo" value={form.codigo || ''} onChange={handleChange} disabled={isView} className="mt-1" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Nombre</label>
-          <input name="nombre" value={form.nombre || ''} onChange={handleChange} disabled={isView} className="mt-1 block w-full border rounded px-3 py-2" />
+          <Label>Nombre</Label>
+          <Input name="nombre" value={form.nombre || ''} onChange={handleChange} disabled={isView} className="mt-1" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Rubro</label>
-          <select name="rubro_id" value={form.rubro_id || ''} onChange={handleChange} disabled={isView} className="mt-1 block w-full border rounded px-3 py-2">
-            <option value="">-- Seleccione --</option>
-            {rubros.map(r => (
-              <option key={r.id} value={r.id}>{r.nombre}</option>
-            ))}
-          </select>
+          <Label>Rubro</Label>
+          <Select value={form.rubro_id ? String(form.rubro_id) : ''} onValueChange={(v) => setForm(prev => ({ ...prev, rubro_id: v }))} disabled={isView}>
+            <SelectTrigger aria-label="Seleccionar rubro">
+              <SelectValue placeholder="-- Seleccione --" />
+            </SelectTrigger>
+            <SelectContent>
+              {rubros.map(r => (
+                <SelectItem key={r.id} value={String(r.id)}>{r.nombre}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
             <div className="flex items-center justify-end space-x-2">
-            <Button onClick={() => navigate(-1)} variant="primary" size="md">Volver</Button>
+            <Button type="button" onClick={() => navigate(-1)} variant="secondary" size="md">Volver</Button>
 
             {!isView && (
-              <Button type="submit" disabled={saving} variant="success" size="md">
+              <Button type="submit" disabled={saving} variant="primary" size="md">
                 {saving ? 'Guardando...' : 'Guardar'}
               </Button>
             )}

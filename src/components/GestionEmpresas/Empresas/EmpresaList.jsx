@@ -1,8 +1,9 @@
 import React from 'react';
-// Corrección de la importación: Asegurar que se puede resolver la ruta
-import EmpresaActions from './EmpresaActions.jsx'; 
+import EmpresaActions from './EmpresaActions.jsx';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 
 
 /**
@@ -32,10 +33,11 @@ const EmpresaList = ({
     // Si hay un error
     if (error) {
         return (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <strong className="font-bold">Error: </strong>
-                <span className="block sm:inline">{error}</span>
-            </div>
+            <Alert variant="destructive">
+              <svg xmlns="http://www.w3.org/2000/svg" className="size-4 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 8v4m0 4h.01" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
         );
     }
     
@@ -129,30 +131,22 @@ const EmpresaList = ({
 
             {/* Paginación */}
             {last_page > 1 && (
-                <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                    <p className="text-sm text-gray-700">
-                        Mostrando <span className="font-medium">{fromIndex}</span> a <span className="font-medium">{toIndex}</span> de <span className="font-medium">{total}</span> resultados
-                    </p>
-                    <div className="flex-1 flex justify-end">
-                        <button
-                            onClick={() => onPageChange(current_page - 1)}
-                            disabled={current_page === 1 || isLoading}
-                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-l-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                        >
-                            <ChevronLeft size={16} className="mr-2" />
-                            Anterior
-                        </button>
-                        <button
-                            onClick={() => onPageChange(current_page + 1)}
-                            disabled={current_page === last_page || isLoading}
-                            className="-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                        >
-                            Siguiente
-                            <ChevronRight size={16} className="ml-2" />
-                        </button>
-                    </div>
-                </div>
-            )}
+                        <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                            <p className="text-sm text-gray-700">
+                                Mostrando <span className="font-medium">{fromIndex}</span> a <span className="font-medium">{toIndex}</span> de <span className="font-medium">{total}</span> resultados
+                            </p>
+                            <div className="flex-1 flex justify-end gap-2">
+                                <Button size="sm" variant="outline" onClick={() => onPageChange(current_page - 1)} disabled={current_page === 1 || isLoading}>
+                                    <ChevronLeft size={16} className="mr-2" />
+                                    Anterior
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => onPageChange(current_page + 1)} disabled={current_page === last_page || isLoading}>
+                                    Siguiente
+                                    <ChevronRight size={16} className="ml-2" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
         </div>
     );
 };
