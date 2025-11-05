@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
+import { Checkbox } from "../ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { ArrowLeft, Download, Save } from "lucide-react"
 import { useEstadosFinancieros } from "../../hooks/EstadosFinancieros/useEstadosFinancieros"
@@ -29,6 +30,7 @@ export default function ImportarEstadoPage() {
   const [datosPreview, setDatosPreview] = useState([])
   const [isLoadingFile, setIsLoadingFile] = useState(false)
   const [catalogoCuentas, setCatalogoCuentas] = useState([])
+  const [usarEnRatios, setUsarEnRatios] = useState({}) // { cuenta_id: boolean }
 
   // Helper para formatear moneda
   const formatCurrency = (value) => {
@@ -403,6 +405,14 @@ export default function ImportarEstadoPage() {
     return mapeo[codigo] || `Cuenta ${codigo}`
   }
 
+  // Manejar cambio de checkbox
+  const handleCheckboxChange = (cuentaId, checked) => {
+    setUsarEnRatios(prev => ({
+      ...prev,
+      [cuentaId]: checked
+    }))
+  }
+
   const handleGuardar = async () => {
     if (!empresa || !periodo || !tipoEstado || datosPreview.length === 0) {
       alert('Por favor completa todos los campos y sube un archivo')
@@ -447,7 +457,8 @@ export default function ImportarEstadoPage() {
         
         detalles.push({
           catalogo_cuenta_id: cuenta.id,
-          monto: item.monto
+          monto: item.monto,
+          usar_en_ratios: usarEnRatios[item.id] ?? false // Usar estado del checkbox, default false
         })
       }
 
@@ -621,6 +632,9 @@ export default function ImportarEstadoPage() {
                         Nombre de Cuenta
                       </th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Monto</th>
+                      <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                        Usar en Ratios
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -636,6 +650,13 @@ export default function ImportarEstadoPage() {
                         <td className="px-4 py-3 text-sm text-foreground">{dato.cuenta}</td>
                         <td className="px-4 py-3 text-right text-sm font-medium text-foreground">
                           {formatCurrency(dato.monto)}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <Checkbox
+                            checked={usarEnRatios[dato.id] ?? false}
+                            onCheckedChange={(checked) => handleCheckboxChange(dato.id, checked)}
+                            aria-label={`Usar ${dato.cuenta} en cálculo de ratios`}
+                          />
                         </td>
                       </tr>
                     ))}
