@@ -103,17 +103,25 @@ const FinancialDashboard = ({
       roles: ["Administrador"]
     },
     {
+      icon: BarChart3,
+      label: "Benchmark promedio",
+      href: "/dashboard/benchmark-promedio",
+      // ajusta permisos/roles si quieres restringirlo:
+      roles: ["Administrador", "Analista Financiero"],
+      permissions: ["ver_ratios"], // <- si manejas este permiso, descomenta
+    },
+    {
       icon: Wallet,
-      label: "Cuentas",
+      label: "Catalogo de Cuentas",
       href: "/dashboard/catalogo-cuentas",
       roles: ["Administrador", "Analista Financiero"], // Solo estos roles pueden ver
       // permissions: ["ver_cuentas"] // Opcional: también puedes agregar permisos
     },
     {
-      icon: CreditCard,
-      label: "Transacciones",
-      href: "/dashboard/transactions",
-      roles: ["Administrador", "Inversor"],
+      icon: BarChart3,
+      label: "Estados Financieros",
+      href: "/dashboard/estados-financieros",
+      roles: ["Administrador", "Analista Financiero"],
       // permissions: ["ver_transacciones"]
     },
 

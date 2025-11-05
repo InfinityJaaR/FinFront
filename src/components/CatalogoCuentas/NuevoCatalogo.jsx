@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import Modal from "@/components/ui/Modal"
 import { Upload, Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, Building2, Save, Loader2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useCatalogoCuentas } from "@/hooks/CatalogoCuentas/useCatalogoCuentas"
@@ -17,6 +18,8 @@ export default function AccountCatalogUploader() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState(null)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [successModalData, setSuccessModalData] = useState({ title: '', description: '' })
 
   const {
     empresas,
@@ -91,7 +94,11 @@ export default function AccountCatalogUploader() {
         throw new Error(`Línea ${index + 2}: Formato inválido. Asegúrese de que cada línea tenga código y nombre`)
       }
 
-      return { codigo, nombre }
+      // Auto-asignar estado financiero basado en el tipo de cuenta
+      const tipo = determinarTipoCuenta(codigo)
+      const estado_financiero = inferirEstadoFinanciero(tipo)
+
+      return { codigo, nombre, estado_financiero }
     })
 
     setAccounts(parsedAccounts)
@@ -119,7 +126,11 @@ export default function AccountCatalogUploader() {
           throw new Error(`Fila ${index + 2}: Formato inválido`)
         }
 
-        return { codigo, nombre }
+        // Auto-asignar estado financiero basado en el tipo de cuenta
+        const tipo = determinarTipoCuenta(codigo)
+        const estado_financiero = inferirEstadoFinanciero(tipo)
+
+        return { codigo, nombre, estado_financiero }
       })
 
     if (parsedAccounts.length === 0) {
@@ -162,7 +173,8 @@ export default function AccountCatalogUploader() {
           codigo: cuenta.codigo,
           nombre: cuenta.nombre,
           tipo: determinarTipoCuenta(cuenta.codigo),
-          es_calculada: false
+          es_calculada: false,
+          estado_financiero: cuenta.estado_financiero || 'NINGUNO'
         }))
       }
 
@@ -170,11 +182,13 @@ export default function AccountCatalogUploader() {
       
       if (response.success) {
         const empresaSeleccionada = empresas.find((c) => c.id === parseInt(selectedCompany))
-        setSuccessMessage(`Catálogo guardado exitosamente para ${empresaSeleccionada?.nombre}`)
         
-        setTimeout(() => {
-          navigate('/dashboard/catalogo-cuentas')
-        }, 2000)
+        // Mostrar modal de éxito
+        setSuccessModalData({
+          title: '¡Catálogo guardado exitosamente!',
+          description: `El catálogo de cuentas para ${empresaSeleccionada?.nombre} se ha guardado correctamente con ${accounts.length} cuenta(s).`
+        })
+        setShowSuccessModal(true)
       }
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Error al guardar el catálogo'
@@ -186,6 +200,7 @@ export default function AccountCatalogUploader() {
   }
 
   // Función auxiliar para determinar el tipo de cuenta según el código
+  // 1 - Activo, 2 - Pasivo, 3 - Patrimonio, 4 - Ingresos, 5 - Costos, 6 - Gastos, 7 - Resultados
   const determinarTipoCuenta = (codigo) => {
     const primerDigito = codigo.toString()[0]
     
@@ -199,10 +214,76 @@ export default function AccountCatalogUploader() {
       case '4':
         return 'INGRESO'
       case '5':
+      case '6':
+      case '7':
         return 'GASTO'
       default:
         return 'ACTIVO' // Por defecto
     }
+  }
+
+  // Función auxiliar para inferir estado financiero según el código
+  // 1-3 → Balance General, 4-7 → Estado de Resultados
+  const inferirEstadoFinanciero = (tipo) => {
+    const mapeo = {
+      'ACTIVO': 'BALANCE_GENERAL',
+      'PASIVO': 'BALANCE_GENERAL',
+      'PATRIMONIO': 'BALANCE_GENERAL',
+      'INGRESO': 'ESTADO_RESULTADOS',
+      'GASTO': 'ESTADO_RESULTADOS',
+    }
+    return mapeo[tipo] || 'NINGUNO'
+  }
+
+  // Handler para cambiar el estado financiero de una cuenta
+  const handleEstadoFinancieroChange = (index, value) => {
+    setAccounts(prevAccounts => {
+      const newAccounts = [...prevAccounts]
+      newAccounts[index].estado_financiero = value
+      return newAccounts
+    })
+  }
+
+  // Aplicar estado financiero masivamente
+  const aplicarEstadoFinancieroMasivo = (estado) => {
+    setAccounts(prevAccounts => 
+      prevAccounts.map(account => {
+        const tipo = determinarTipoCuenta(account.codigo)
+        const primerDigito = account.codigo.toString()[0]
+        
+        // Balance General: códigos 1, 2, 3
+        if (estado === 'BALANCE_GENERAL' && ['1', '2', '3'].includes(primerDigito)) {
+          return { ...account, estado_financiero: estado }
+        }
+        // Estado de Resultados: códigos 4, 5, 6, 7
+        if (estado === 'ESTADO_RESULTADOS' && ['4', '5', '6', '7'].includes(primerDigito)) {
+          return { ...account, estado_financiero: estado }
+        }
+        return account
+      })
+    )
+    setSuccessMessage(`Estado financiero aplicado exitosamente`)
+    setTimeout(() => setSuccessMessage(null), 3000)
+  }
+
+  // Función para formatear el estado financiero
+  const formatEstadoFinanciero = (estado) => {
+    const labels = {
+      'BALANCE_GENERAL': 'Balance General',
+      'ESTADO_RESULTADOS': 'Estado de Resultados',
+      'NINGUNO': 'N/A'
+    }
+    return labels[estado] || estado
+  }
+
+  // Función para obtener la clase CSS del badge
+  const getBadgeClass = (estado) => {
+    const classes = {
+      'BALANCE_GENERAL': 'bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium',
+      'ESTADO_RESULTADOS': 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium',
+      'NINGUNO': 'bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium'
+    }
+    return classes[estado] || classes['NINGUNO']
   }
 
   const handleCancel = () => {
@@ -342,6 +423,24 @@ export default function AccountCatalogUploader() {
             </Button>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 flex flex-wrap gap-2">
+              <Button 
+                onClick={() => aplicarEstadoFinancieroMasivo('BALANCE_GENERAL')}
+                variant="outline"
+                size="sm"
+                className="text-blue-600 border-blue-300 hover:bg-blue-50"
+              >
+                Cuentas 1-2-3 → Balance General
+              </Button>
+              <Button 
+                onClick={() => aplicarEstadoFinancieroMasivo('ESTADO_RESULTADOS')}
+                variant="outline"
+                size="sm"
+                className="text-green-600 border-green-300 hover:bg-green-50"
+              >
+                Cuentas 4-5-6-7 → Estado de Resultados
+              </Button>
+            </div>
             <div className="rounded-lg border border-gray-200 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -349,6 +448,7 @@ export default function AccountCatalogUploader() {
                     <tr className="bg-gray-50">
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Código</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Nombre de Cuenta</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Estado Financiero</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -356,6 +456,21 @@ export default function AccountCatalogUploader() {
                       <tr key={index} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3 text-sm font-mono text-gray-900">{account.codigo}</td>
                         <td className="px-4 py-3 text-sm text-gray-900">{account.nombre}</td>
+                        <td className="px-4 py-3">
+                          <Select 
+                            value={account.estado_financiero} 
+                            onValueChange={(value) => handleEstadoFinancieroChange(index, value)}
+                          >
+                            <SelectTrigger className="w-full max-w-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="NINGUNO">Ninguno</SelectItem>
+                              <SelectItem value="BALANCE_GENERAL">Balance General</SelectItem>
+                              <SelectItem value="ESTADO_RESULTADOS">Estado de Resultados</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -418,6 +533,32 @@ export default function AccountCatalogUploader() {
         </CardContent>
       </Card>
       </div>
+
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false)
+          navigate('/dashboard/catalogo-cuentas')
+        }}
+        type="success"
+        title={successModalData.title}
+        footer={
+          <Button
+            onClick={() => {
+              setShowSuccessModal(false)
+              navigate('/dashboard/catalogo-cuentas')
+            }}
+            className="gap-2"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            Continuar
+          </Button>
+        }
+      >
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          {successModalData.description}
+        </p>
+      </Modal>
     </div>
   )
 }

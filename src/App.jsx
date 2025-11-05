@@ -16,6 +16,10 @@ import NuevoCatalogoPage from './pages/GestionCuentas/NuevoCatalogo'
 import { ModalProvider } from '@/context/ModalContext'
 import RatiosEmpresa from './pages/GestionEmpresas/Ratios/RatiosEmpresa';
 import ComparacionesInternasPage from "./pages/GestionEmpresas/Ratios/ComparacionesInternasPage";
+import EstadosFinancierosPage from './pages/EstadosFinancieros/EstadosFinancieros';
+import NuevoEstadoPage from './components/EstadosFinancieros/NuevoEstado';
+import ImportarEstadoPage from './components/EstadosFinancieros/ImportarEstado';
+import BenchmarkPromedio from "@/components/GestionEmpresas/Ratios/BenchmarkPromedio";
 
 import { useParams } from 'react-router-dom';
 
@@ -159,6 +163,12 @@ function App() {
                 </PermissionRoute>
               }
             />
+
+            <Route
+              path="/dashboard/benchmark-promedio"
+              element={<BenchmarkPromedio />}
+            />
+
 
 
             {/* Administradores y Contadores */}
@@ -348,6 +358,20 @@ function App() {
                   <NuevoCatalogoPage />
                 </PermissionRoute>
               }
+            />
+
+            {/* Estados Financieros */}
+            <Route
+              path="estados-financieros"
+              element={<EstadosFinancierosPage />}
+            />
+            <Route
+              path="estados-financieros/nuevo"
+              element={<NuevoEstadoPage />}
+            />
+            <Route
+              path="estados-financieros/importar"
+              element={<ImportarEstadoPage />}
             />
 
             {/* Accesible para todos */}
