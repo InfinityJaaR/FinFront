@@ -6,7 +6,9 @@ import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { Checkbox } from "../ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { ArrowLeft, Download, Save } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
+import Modal from "../ui/Modal"
+import { ArrowLeft, Download, Save, CheckCircle2, AlertCircle } from "lucide-react"
 import { useEstadosFinancieros } from "../../hooks/EstadosFinancieros/useEstadosFinancieros"
 
 export default function ImportarEstadoPage() {
@@ -31,6 +33,11 @@ export default function ImportarEstadoPage() {
   const [isLoadingFile, setIsLoadingFile] = useState(false)
   const [catalogoCuentas, setCatalogoCuentas] = useState([])
   const [usarEnRatios, setUsarEnRatios] = useState({}) // { cuenta_id: boolean }
+  
+  // Estados para notificaciones
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [successMessage, setSuccessMessage] = useState({ title: '', description: '' })
+  const [errorMessage, setErrorMessage] = useState(null)
 
   // Helper para formatear moneda
   const formatCurrency = (value) => {
@@ -80,15 +87,20 @@ export default function ImportarEstadoPage() {
 
   const handleDescargarPlantilla = async () => {
     if (!empresa || !tipoEstado) {
-      alert('Selecciona empresa y tipo de estado primero')
+      setErrorMessage('Selecciona empresa y tipo de estado primero')
       return
     }
 
+    setErrorMessage(null)
     try {
       await descargarPlantilla(parseInt(empresa), tipoEstado === 'balance' ? 'BALANCE' : 'RESULTADOS')
-      alert('Plantilla descargada exitosamente')
+      setSuccessMessage({
+        title: 'Plantilla descargada',
+        description: 'La plantilla CSV se ha descargado correctamente. Complétala y súbela para continuar.'
+      })
+      setShowSuccessModal(true)
     } catch (err) {
-      alert(err.response?.data?.message || 'Error al descargar plantilla')
+      setErrorMessage(err.response?.data?.message || 'Error al descargar la plantilla. Intenta nuevamente.')
       console.error('Error descargando plantilla:', err)
     }
   }
@@ -118,7 +130,7 @@ export default function ImportarEstadoPage() {
     }
     reader.onerror = (error) => {
       console.error('Error al leer el archivo:', error)
-      alert('Error al leer el archivo')
+      setErrorMessage('Error al leer el archivo. Por favor, inténtalo de nuevo.')
       setIsLoadingFile(false)
     }
     reader.readAsText(file)
@@ -415,7 +427,7 @@ export default function ImportarEstadoPage() {
 
   const handleGuardar = async () => {
     if (!empresa || !periodo || !tipoEstado || datosPreview.length === 0) {
-      alert('Por favor completa todos los campos y sube un archivo')
+      setErrorMessage('Por favor completa todos los campos y sube un archivo antes de guardar')
       return
     }
 
@@ -424,10 +436,11 @@ export default function ImportarEstadoPage() {
     console.log('Length:', catalogoCuentas?.length)
 
     if (!Array.isArray(catalogoCuentas) || catalogoCuentas.length === 0) {
-      alert('No se ha cargado el catálogo de cuentas para esta empresa. Intenta seleccionar la empresa nuevamente.')
+      setErrorMessage('No se ha cargado el catálogo de cuentas para esta empresa. Intenta seleccionar la empresa nuevamente.')
       return
     }
 
+    setErrorMessage(null)
     try {
       // Convertir códigos a IDs usando el catálogo de cuentas
       // IMPORTANTE: Solo enviar cuentas NO calculadas (hojas del árbol)
@@ -476,7 +489,7 @@ export default function ImportarEstadoPage() {
       }
 
       if (detalles.length === 0) {
-        alert('No hay cuentas válidas para guardar. Todas las cuentas fueron omitidas porque no existen en el catálogo de la empresa.')
+        setErrorMessage('No hay cuentas válidas para guardar. Todas las cuentas fueron omitidas porque no existen en el catálogo de la empresa.')
         return
       }
 
@@ -491,21 +504,25 @@ export default function ImportarEstadoPage() {
 
       await crearEstado(datos)
       
-      let mensaje = 'Estado financiero creado exitosamente'
+      // Construir mensaje de éxito
+      let descripcion = `El estado financiero se ha guardado correctamente con ${detalles.length} cuenta(s).`
       if (cuentasCalculadasOmitidas.length > 0) {
-        mensaje += `\n\nNota: ${cuentasCalculadasOmitidas.length} cuenta(s) agregada(s) fueron calculadas automáticamente por el sistema.`
+        descripcion += ` ${cuentasCalculadasOmitidas.length} cuenta(s) agregada(s) fueron calculadas automáticamente.`
       }
       if (cuentasNoEncontradas.length > 0) {
-        mensaje += `\n\nAdvertencia: ${cuentasNoEncontradas.length} cuenta(s) no encontradas en el catálogo fueron omitidas.`
+        descripcion += ` ${cuentasNoEncontradas.length} cuenta(s) fueron omitidas por no estar en el catálogo.`
       }
       
-      alert(mensaje)
-      navigate('/dashboard/estados-financieros')
+      setSuccessMessage({
+        title: '¡Estado financiero guardado!',
+        description: descripcion
+      })
+      setShowSuccessModal(true)
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Error al crear el estado financiero'
       console.error('Error completo:', err)
       console.error('Respuesta del servidor:', err.response?.data)
-      alert(`Error: ${errorMsg}`)
+      setErrorMessage(errorMsg)
     }
   }
 
@@ -672,6 +689,14 @@ export default function ImportarEstadoPage() {
                 </table>
               </div>
 
+              {errorMessage && (
+                <Alert variant="destructive" className="mt-6">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{errorMessage}</AlertDescription>
+                </Alert>
+              )}
+
               <div className="mt-6 flex justify-end gap-3">
                 <Button variant="outline" onClick={() => navigate(-1)}>
                   Cancelar
@@ -685,6 +710,32 @@ export default function ImportarEstadoPage() {
           </Card>
         )}
       </div>
+
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false)
+          navigate('/dashboard/estados-financieros')
+        }}
+        type="success"
+        title={successMessage.title}
+        footer={
+          <Button
+            onClick={() => {
+              setShowSuccessModal(false)
+              navigate('/dashboard/estados-financieros')
+            }}
+            className="gap-2"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            Continuar
+          </Button>
+        }
+      >
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          {successMessage.description}
+        </p>
+      </Modal>
     </div>
   )
 }

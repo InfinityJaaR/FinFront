@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import Modal from "@/components/ui/Modal"
 import { Upload, Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, Building2, Save, Loader2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useCatalogoCuentas } from "@/hooks/CatalogoCuentas/useCatalogoCuentas"
@@ -17,6 +18,8 @@ export default function AccountCatalogUploader() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState(null)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [successModalData, setSuccessModalData] = useState({ title: '', description: '' })
 
   const {
     empresas,
@@ -179,11 +182,13 @@ export default function AccountCatalogUploader() {
       
       if (response.success) {
         const empresaSeleccionada = empresas.find((c) => c.id === parseInt(selectedCompany))
-        setSuccessMessage(`Catálogo guardado exitosamente para ${empresaSeleccionada?.nombre}`)
         
-        setTimeout(() => {
-          navigate('/dashboard/catalogo-cuentas')
-        }, 2000)
+        // Mostrar modal de éxito
+        setSuccessModalData({
+          title: '¡Catálogo guardado exitosamente!',
+          description: `El catálogo de cuentas para ${empresaSeleccionada?.nombre} se ha guardado correctamente con ${accounts.length} cuenta(s).`
+        })
+        setShowSuccessModal(true)
       }
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Error al guardar el catálogo'
@@ -528,6 +533,32 @@ export default function AccountCatalogUploader() {
         </CardContent>
       </Card>
       </div>
+
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false)
+          navigate('/dashboard/catalogo-cuentas')
+        }}
+        type="success"
+        title={successModalData.title}
+        footer={
+          <Button
+            onClick={() => {
+              setShowSuccessModal(false)
+              navigate('/dashboard/catalogo-cuentas')
+            }}
+            className="gap-2"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            Continuar
+          </Button>
+        }
+      >
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          {successModalData.description}
+        </p>
+      </Modal>
     </div>
   )
 }
