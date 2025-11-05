@@ -19,6 +19,7 @@ import ComparacionesInternasPage from "./pages/GestionEmpresas/Ratios/Comparacio
 import EstadosFinancierosPage from './pages/EstadosFinancieros/EstadosFinancieros';
 import NuevoEstadoPage from './components/EstadosFinancieros/NuevoEstado';
 import ImportarEstadoPage from './components/EstadosFinancieros/ImportarEstado';
+import BenchmarkPromedio from "@/components/GestionEmpresas/Ratios/BenchmarkPromedio";
 
 import { useParams } from 'react-router-dom';
 
@@ -162,6 +163,12 @@ function App() {
                 </PermissionRoute>
               }
             />
+
+            <Route
+              path="/dashboard/benchmark-promedio"
+              element={<BenchmarkPromedio />}
+            />
+
 
 
             {/* Administradores y Contadores */}
