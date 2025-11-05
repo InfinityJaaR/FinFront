@@ -162,10 +162,13 @@ export default function BalanceGeneral({ empresaId, periodoId }) {
                   </div>
                 )
               })}
-              <div className="flex items-center justify-between border-t-2 border-border pt-2">
-                <span className="font-semibold text-foreground">Total Activos</span>
-                <span className="font-bold tabular-nums text-foreground">{formatCurrency(totalActivos)}</span>
-              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-muted p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-bold text-foreground">TOTAL ACTIVOS</span>
+              <span className="text-xl font-bold text-foreground">{formatCurrency(totalActivos)}</span>
             </div>
           </div>
         </CardContent>

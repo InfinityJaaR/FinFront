@@ -188,9 +188,59 @@ export default function ImportarEstadoPage() {
         }
         
         if (codigo && nombre && monto) {
-          // Validar que el monto sea numérico
-          const montoNumerico = Number.parseFloat(monto.replace(/[^0-9.-]/g, ""))
-          console.log(`Monto parseado: "${monto}" -> ${montoNumerico}`)
+          // Parsear monto de forma inteligente para soportar enteros y decimales
+          let montoLimpio = monto.trim()
+          
+          // Detectar si tiene punto Y coma
+          const tienePunto = montoLimpio.includes('.')
+          const tieneComa = montoLimpio.includes(',')
+          
+          if (tienePunto && tieneComa) {
+            // Tiene ambos: el que aparece ÚLTIMO es el separador decimal
+            const posUltimoPunto = montoLimpio.lastIndexOf('.')
+            const posUltimaComa = montoLimpio.lastIndexOf(',')
+            
+            if (posUltimaComa > posUltimoPunto) {
+              // Formato europeo: 1.234,56 → quitar puntos, cambiar coma por punto
+              montoLimpio = montoLimpio.replace(/\./g, '').replace(',', '.')
+            } else {
+              // Formato anglosajón: 1,234.56 → quitar comas
+              montoLimpio = montoLimpio.replace(/,/g, '')
+            }
+          } else if (tieneComa && !tienePunto) {
+            // Solo tiene coma: verificar si es decimal o miles
+            const partesComa = montoLimpio.split(',')
+            
+            if (partesComa.length === 2 && partesComa[1].length <= 2) {
+              // Tiene exactamente 1 coma con 1-2 dígitos después: es decimal
+              // Ejemplo: 12,5 o 12,50
+              montoLimpio = montoLimpio.replace(',', '.')
+            } else {
+              // Múltiples comas o más de 2 dígitos después: es separador de miles
+              // Ejemplo: 1,234 o 1,234,567
+              montoLimpio = montoLimpio.replace(/,/g, '')
+            }
+          } else if (tienePunto && !tieneComa) {
+            // Solo tiene punto: verificar si es decimal o miles
+            const partesPunto = montoLimpio.split('.')
+            
+            if (partesPunto.length === 2 && partesPunto[1].length <= 2) {
+              // Tiene exactamente 1 punto con 1-2 dígitos después: es decimal
+              // Ejemplo: 12.5 o 12.50
+              // Dejar como está (JavaScript usa punto como decimal)
+            } else {
+              // Múltiples puntos o 3 dígitos después: es separador de miles
+              // Ejemplo: 33.750 o 1.234.567
+              montoLimpio = montoLimpio.replace(/\./g, '')
+            }
+          }
+          
+          // Remover cualquier espacio o símbolo de moneda restante
+          montoLimpio = montoLimpio.replace(/[^\d.-]/g, '')
+          
+          // Convertir a número (parseFloat maneja decimales)
+          const montoNumerico = parseFloat(montoLimpio)
+          console.log(`Monto parseado: "${monto}" -> "${montoLimpio}" -> ${montoNumerico}`)
           
           if (!isNaN(montoNumerico) && montoNumerico !== 0) {
             const item = {
@@ -370,8 +420,11 @@ export default function ImportarEstadoPage() {
 
     try {
       // Convertir códigos a IDs usando el catálogo de cuentas
+      // IMPORTANTE: Solo enviar cuentas NO calculadas (hojas del árbol)
+      // El backend se encargará de calcular las cuentas agregadas
       const detalles = []
       const cuentasNoEncontradas = []
+      const cuentasCalculadasOmitidas = []
       
       for (const item of datosPreview) {
         console.log(`Buscando código: ${item.codigo}`)
@@ -381,6 +434,13 @@ export default function ImportarEstadoPage() {
           console.warn(`⚠️ Cuenta ${item.codigo} (${item.cuenta}) NO encontrada en catálogo - se omitirá`)
           cuentasNoEncontradas.push(`${item.codigo} - ${item.cuenta}`)
           continue // Omitir esta cuenta en lugar de lanzar error
+        }
+        
+        // Omitir cuentas calculadas - el backend las calculará
+        if (cuenta.es_calculada) {
+          console.log(`⚠️ Cuenta ${cuenta.codigo} es calculada - se omitirá (backend la calculará)`)
+          cuentasCalculadasOmitidas.push(`${cuenta.codigo} - ${cuenta.nombre}`)
+          continue
         }
         
         console.log(`✓ Encontrada cuenta: ${cuenta.codigo} -> ID: ${cuenta.id}`)
@@ -395,9 +455,13 @@ export default function ImportarEstadoPage() {
       console.log(`=== RESUMEN ===`)
       console.log(`Total cuentas en preview: ${datosPreview.length}`)
       console.log(`Cuentas a enviar: ${detalles.length}`)
-      console.log(`Cuentas omitidas: ${cuentasNoEncontradas.length}`)
+      console.log(`Cuentas calculadas omitidas (backend las calculará): ${cuentasCalculadasOmitidas.length}`)
+      console.log(`Cuentas no encontradas: ${cuentasNoEncontradas.length}`)
+      if (cuentasCalculadasOmitidas.length > 0) {
+        console.log('Cuentas calculadas omitidas:', cuentasCalculadasOmitidas)
+      }
       if (cuentasNoEncontradas.length > 0) {
-        console.log('Cuentas omitidas (no están en catálogo):', cuentasNoEncontradas)
+        console.log('Cuentas no encontradas en catálogo:', cuentasNoEncontradas)
       }
 
       if (detalles.length === 0) {
@@ -417,8 +481,11 @@ export default function ImportarEstadoPage() {
       await crearEstado(datos)
       
       let mensaje = 'Estado financiero creado exitosamente'
+      if (cuentasCalculadasOmitidas.length > 0) {
+        mensaje += `\n\nNota: ${cuentasCalculadasOmitidas.length} cuenta(s) agregada(s) fueron calculadas automáticamente por el sistema.`
+      }
       if (cuentasNoEncontradas.length > 0) {
-        mensaje += `\n\nNota: ${cuentasNoEncontradas.length} cuenta(s) calculada(s) fueron omitidas porque no existen en el catálogo de la empresa.`
+        mensaje += `\n\nAdvertencia: ${cuentasNoEncontradas.length} cuenta(s) no encontradas en el catálogo fueron omitidas.`
       }
       
       alert(mensaje)
