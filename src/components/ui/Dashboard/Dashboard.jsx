@@ -103,6 +103,14 @@ const FinancialDashboard = ({
       roles: ["Administrador"]
     },
     {
+      icon: BarChart3,
+      label: "Benchmark promedio",
+      href: "/dashboard/benchmark-promedio",
+      // ajusta permisos/roles si quieres restringirlo:
+      roles: ["Administrador", "Analista Financiero"],
+      permissions: ["ver_ratios"], // <- si manejas este permiso, descomenta
+    },
+    {
       icon: Wallet,
       label: "Cuentas",
       href: "/dashboard/catalogo-cuentas",

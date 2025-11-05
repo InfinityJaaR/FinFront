@@ -16,6 +16,7 @@ import NuevoCatalogoPage from './pages/GestionCuentas/NuevoCatalogo'
 import { ModalProvider } from '@/context/ModalContext'
 import RatiosEmpresa from './pages/GestionEmpresas/Ratios/RatiosEmpresa';
 import ComparacionesInternasPage from "./pages/GestionEmpresas/Ratios/ComparacionesInternasPage";
+import BenchmarkPromedio from "@/components/GestionEmpresas/Ratios/BenchmarkPromedio";
 
 import { useParams } from 'react-router-dom';
 
@@ -159,6 +160,12 @@ function App() {
                 </PermissionRoute>
               }
             />
+
+            <Route
+              path="/dashboard/benchmark-promedio"
+              element={<BenchmarkPromedio />}
+            />
+
 
 
             {/* Administradores y Contadores */}
