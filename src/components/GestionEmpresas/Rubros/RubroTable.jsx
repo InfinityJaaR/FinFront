@@ -26,11 +26,7 @@ const RubroTable = ({ rubros, onView, onEdit, onDelete, isSubmitting }) => {
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código / Nombre</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Descripción</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">P. Ácida</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">P. Liquidez</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">P. Apalancamiento</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">P. Rentabilidad</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Descripción</th>
                             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
@@ -47,13 +43,7 @@ const RubroTable = ({ rubros, onView, onEdit, onDelete, isSubmitting }) => {
                                 <td className="px-4 py-3 text-sm text-gray-600 max-w-sm">
                                     {rubro.descripcion || 'N/A'}
                                 </td>
-                                
-                                {/* Celdas de Promedio: Centradas y formato de número */}
-                                <td className="px-4 py-3 text-center text-sm font-medium font-mono text-gray-800">{rubro.promedio_prueba_acida || '-'}</td>
-                                <td className="px-4 py-3 text-center text-sm font-medium font-mono text-gray-800">{rubro.promedio_liquidez_corriente || '-'}</td>
-                                <td className="px-4 py-3 text-center text-sm font-medium font-mono text-gray-800">{rubro.promedio_apalancamiento || '-'}</td>
-                                <td className="px-4 py-3 text-center text-sm font-medium font-mono text-gray-800">{rubro.promedio_rentabilidad || '-'}</td>
-                                
+
                                 {/* Celda de Acciones */}
                                 <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
                                     <RubroActionsCell 

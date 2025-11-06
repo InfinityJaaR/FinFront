@@ -119,11 +119,11 @@ const EmpresaFormPage = () => {
           </Select>
         </div>
 
-            <div className="flex items-center justify-end space-x-2">
-            <Button type="button" onClick={() => navigate(-1)} variant="secondary" size="md">Volver</Button>
+          <div className="flex items-center justify-end space-x-3 mt-4">
+            <Button type="button" onClick={() => navigate(-1)} variant="outline" size="lg" className="px-5">Volver</Button>
 
             {!isView && (
-              <Button type="submit" disabled={saving} variant="primary" size="md">
+              <Button type="submit" disabled={saving} variant="primary" size="lg" className="px-6">
                 {saving ? 'Guardando...' : 'Guardar'}
               </Button>
             )}

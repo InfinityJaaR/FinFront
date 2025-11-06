@@ -443,10 +443,10 @@ const RatioFormPage = () => {
             </label>
           </div>
 
-          <div className="col-span-12 flex items-center justify-end space-x-2">
-            <Button type="button" onClick={() => navigate(-1)} variant="primary" size="md">Volver</Button>
+          <div className="col-span-12 flex items-center justify-end space-x-3 mt-4">
+            <Button type="button" onClick={() => navigate(-1)} variant="outline" size="lg" className="px-5">Volver</Button>
             {!isView && ( (authService.hasPermission && authService.hasPermission('gestionar_ratios_definicion')) || (authService.getUserRole && authService.getUserRole() === 'Administrador') ) && (
-              <Button type="submit" disabled={saving} variant="success" size="md">
+              <Button type="submit" disabled={saving} variant="primary" size="lg" className="px-6">
                 {saving ? 'Guardando...' : 'Guardar'}
               </Button>
             )}

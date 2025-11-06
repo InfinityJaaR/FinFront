@@ -118,6 +118,41 @@ class RubroService {
             throw error;
         }
     }
+
+    /**
+     * Crear o actualizar un benchmark para un rubro y ratio.
+     * POST /api/rubros/{rubroId}/benchmarks
+     * @param {number} rubroId
+     * @param {Object} payload { ratio_id, valor_promedio, fuente }
+     */
+    async createBenchmark(rubroId, payload) {
+        try {
+            const response = await axios.post(`${RUBROS_API_URL}/${rubroId}/benchmarks`, payload, {
+                headers: getAuthHeaders(),
+            });
+            return response.data;
+        } catch (error) {
+            console.error(`Error al crear benchmark para rubro ${rubroId}:`, error.response?.data || error.message || error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener benchmarks de un rubro
+     * GET /api/rubros/{rubroId}/benchmarks
+     * @param {number} rubroId
+     */
+    async getBenchmarks(rubroId) {
+        try {
+            const response = await axios.get(`${RUBROS_API_URL}/${rubroId}/benchmarks`, {
+                headers: getAuthHeaders(),
+            });
+            return response.data; // puede ser array o { data: [...] }
+        } catch (error) {
+            console.error(`Error al obtener benchmarks para rubro ${rubroId}:`, error.response?.data || error.message || error);
+            throw error;
+        }
+    }
 }
 
 export default new RubroService();

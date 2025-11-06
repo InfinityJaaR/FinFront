@@ -2,6 +2,7 @@ import React from 'react';
 import { useRubros } from '@/hooks/GestionEmpresas/Rubros/useRubros'; // Hook de gestión de datos
 import { useAuth } from '@/hooks/auth/useAuth'; // Tu hook existente para permisos
 import { Plus, Loader2, AlertTriangle, X } from 'lucide-react';
+import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom';
 import { useModal } from '@/context/ModalContext'
 import RubroTable from '@/components/GestionEmpresas/Rubros/RubroTable'; // Nuevo componente
@@ -67,16 +68,12 @@ const RubrosPage = () => {
                 <h1 className="text-3xl font-bold text-gray-900">Gestión de Rubros Empresariales</h1>
                 
                 {/* Botón de Creación */}
-                {canManageRubros && (
-                    <button
-                        onClick={() => navigate('/dashboard/gestion-empresas/rubros/create')}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg transition-colors transform hover:scale-[1.02] active:scale-95 disabled:opacity-70"
-                        title="Crear Nuevo Rubro"
-                    >
-                        <Plus className="h-5 w-5" />
-                        Nuevo Rubro
-                    </button>
-                )}
+                                {canManageRubros && (
+                                    <Button onClick={() => navigate('/dashboard/gestion-empresas/rubros/create')} variant="primary" size="lg" className="flex items-center gap-2">
+                                        <Plus className="h-5 w-5" />
+                                        Nuevo Rubro
+                                    </Button>
+                                )}
             </header>
             
             <div className="bg-white rounded-2xl p-6 shadow-xl border border-gray-100">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom';
 // Corrección de rutas: Añadir extensiones para asegurar la resolución
 import useEmpresas from '@/hooks/GestionEmpresas/Empresas/useEmpresa';
@@ -38,13 +39,10 @@ const EmpresasPage = () => {
         <div className="p-8 space-y-8 bg-gray-50 min-h-screen">
             <header className="flex justify-between items-center pb-4 border-b border-gray-200">
                 <h1 className="text-3xl font-extrabold text-gray-900">Gestión de Empresas</h1>
-                <button
-                    onClick={handleNew}
-                    className="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300"
-                >
-                    <Plus size={20} className="mr-2" />
+                <Button onClick={handleNew} variant="primary" size="lg" className="flex items-center gap-2">
+                    <Plus size={18} />
                     Nueva Empresa
-                </button>
+                </Button>
             </header>
 
             {/* Herramientas de búsqueda y filtro */}
