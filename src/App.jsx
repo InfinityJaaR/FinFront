@@ -18,8 +18,11 @@ import RatiosEmpresa from './pages/GestionEmpresas/Ratios/RatiosEmpresa';
 import ComparacionesInternasPage from "./pages/GestionEmpresas/Ratios/ComparacionesInternasPage";
 import EstadosFinancierosPage from './pages/EstadosFinancieros/EstadosFinancieros';
 import NuevoEstadoPage from './components/EstadosFinancieros/NuevoEstado';
+import AsignacionCatalogo from "@/components/CatalogoCuentas/AsignacionCatalogo";
 import ImportarEstadoPage from './components/EstadosFinancieros/ImportarEstado';
 import BenchmarkPromedio from "@/components/GestionEmpresas/Ratios/BenchmarkPromedio";
+
+
 
 import { useParams } from 'react-router-dom';
 
@@ -373,6 +376,12 @@ function App() {
               path="estados-financieros/importar"
               element={<ImportarEstadoPage />}
             />
+            <Route
+            path="/dashboard/gestion-empresas/asignacion-catalogo"
+            element={<AsignacionCatalogo />}
+            />
+
+
 
             {/* Accesible para todos */}
             <Route

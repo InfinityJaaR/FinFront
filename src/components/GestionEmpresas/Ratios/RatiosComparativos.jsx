@@ -33,28 +33,21 @@ export default function RatiosComparativos({ empresaId: empresaIdProp, nombreEmp
       : String(Date.now() + Math.random());
 
   // 1) Cargar nombre de la empresa (si no se pasó por props)
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!empresaId) {
-          setError("No se encontró el ID de empresa.");
-          return;
-        }
-        if (!nombreProp) {
-          const empresa = await EmpresasService.getEmpresa(empresaId);
-          if (empresa?.nombre) setEmpresaNombre(empresa.nombre);
-        }
-      } catch (e) {
-        console.error("Error cargando empresa:", {
-          message: e.message,
-          status: e.response?.status,
-          data: e.response?.data,
-        });
-        // Si falla, dejamos "Empresa xyz" para no romper la UI
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [empresaId]);
+useEffect(() => {
+  (async () => {
+    try {
+      if (!empresaId) return;
+      // usar endpoint lite con permiso ver_ratios
+      const e = await EmpresasService.getEmpresaResumen(empresaId);
+      if (e?.nombre) setEmpresaNombre(e.nombre);
+    } catch (err) {
+      // fallback sin romper la UI
+      setEmpresaNombre(`Empresa #${empresaId}`);
+    }
+  })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [empresaId]);
+
 
   // 2) Cargar catálogos: periodos + definiciones
   useEffect(() => {

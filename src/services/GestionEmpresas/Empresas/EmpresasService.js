@@ -39,6 +39,26 @@ class EmpresaService {
         }
     }
 
+// Ponlo dentro de la clase EmpresaService
+async getEmpresas() {
+  try {
+    const response = await axios.get(`${EMPRESAS_API_URL}`, {
+      headers: getAuthHeaders(),
+    });
+    const d = response.data;
+    // Normaliza: array directo, o en data, o en items, o vacío.
+    if (Array.isArray(d)) return d;
+    if (Array.isArray(d?.data)) return d.data;
+    if (Array.isArray(d?.items)) return d.items;
+    return [];
+  } catch (error) {
+    console.error('Error al obtener todas las empresas:', error);
+    throw error;
+  }
+}
+
+
+
     /**
      * [3. SHOW] OBTENER los detalles de una empresa específica.
      * GET /api/empresas/{id}
@@ -168,6 +188,29 @@ class EmpresaService {
             throw error;
         }
     }
+        async getEmpresaResumen(id) {
+  const response = await axios.get(`${EMPRESAS_API_URL}/${id}/resumen`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data.data; // { id, nombre }
+
+  
+}
+
+async getEmpresasAll() {
+  try {
+    const response = await axios.get(`${EMPRESAS_API_URL}/all`, {
+      headers: getAuthHeaders(),
+    });
+    // Devuelve array plano de empresas
+    return response.data?.data ?? [];
+  } catch (error) {
+    console.error('Error al obtener todas las empresas:', error);
+    throw error;
+  }
+}
+
+
 }
 
 export default new EmpresaService();
