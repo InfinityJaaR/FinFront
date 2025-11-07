@@ -10,6 +10,16 @@ export default function AsignacionCatalogo() {
   const [mapeo, setMapeo] = useState({});
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const userRole = storedUser?.roles?.[0]?.name || "";
+  const isAnalista = userRole === "Analista Financiero";
+  const onChangeEmpresa = async (id) => {
+  setEmpresaId(id);
+  if (id) {
+    await cargarMapeo(id);
+  }
+};
+
 
   // 1️⃣ Cargar lista de empresas y conceptos globales
   useEffect(() => {
@@ -23,6 +33,16 @@ export default function AsignacionCatalogo() {
     };
     cargarListas();
   }, []);
+useEffect(() => {
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  
+  // Si es analista, autoasigna su empresa
+  if (storedUser?.roles?.[0]?.name === "Analista Financiero" && storedUser.empresa_id) {
+    setEmpresaId(storedUser.empresa_id);
+    cargarMapeo(storedUser.empresa_id);
+  }
+}, []); // 👈 Importante: sin dependencias
+
 
   // 2️⃣ Cargar mapeo de la empresa seleccionada
   const cargarMapeo = async (id) => {
@@ -87,18 +107,21 @@ export default function AsignacionCatalogo() {
       {/* Selector de empresa */}
       <div className="mb-6">
         <label className="block font-medium mb-1">Empresa</label>
-        <select
-          className="border rounded-md p-2 w-full"
-          value={empresaId}
-          onChange={handleEmpresaChange}
-        >
-          <option value="">-- Seleccione empresa --</option>
-          {empresas.map((emp) => (
-            <option key={emp.id} value={emp.id}>
-              {emp.nombre}
-            </option>
-          ))}
-        </select>
+    <select
+  className="border px-3 py-2 rounded"
+  value={empresaId}
+  onChange={(e) => onChangeEmpresa(e.target.value)}
+  disabled={isAnalista} // analista no puede cambiar
+>
+  <option value="">Seleccione empresa</option>
+  {empresas.map((e) => (
+    <option key={e.id} value={e.id}>
+      {e.nombre}
+    </option>
+  ))}
+</select>
+
+
       </div>
 
       {msg && <div className="mb-4 text-red-600">{msg}</div>}
