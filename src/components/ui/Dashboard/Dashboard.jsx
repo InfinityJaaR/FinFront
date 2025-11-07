@@ -107,7 +107,7 @@ const FinancialDashboard = ({
       label: "Benchmark promedio",
       href: "/dashboard/benchmark-promedio",
       // ajusta permisos/roles si quieres restringirlo:
-      roles: ["Administrador", "Analista Financiero"],
+      roles: ["Administrador"],
       permissions: ["ver_ratios"], // <- si manejas este permiso, descomenta
     },
     {
@@ -123,6 +123,13 @@ const FinancialDashboard = ({
       href: "/dashboard/estados-financieros",
       roles: ["Administrador", "Analista Financiero"],
       // permissions: ["ver_transacciones"]
+    },
+    {
+      icon: BarChart3, // o cualquier ícono que te guste
+      label: "Asignación de Catálogo",
+      href: "/dashboard/catalogo/asignacion",
+      roles: ["Administrador", "Analista Financiero"], // o también "Analista Financiero" si quieres
+      permissions: ["gestionar_catalogo_cuentas"]
     },
 
     {
