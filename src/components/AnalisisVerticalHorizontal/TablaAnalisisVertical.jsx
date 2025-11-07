@@ -216,7 +216,7 @@ export default function TablaAnalisisVertical({ datos, loading = false }) {
                 </span>
               </CardTitle>
               <p className="text-lg font-semibold">
-                Denominador: {formatearMoneda(datos.totales?.[seccion] || 0)}
+                Total: {formatearMoneda(datos.totales?.[seccion] || 0)}
               </p>
             </div>
           </CardHeader>

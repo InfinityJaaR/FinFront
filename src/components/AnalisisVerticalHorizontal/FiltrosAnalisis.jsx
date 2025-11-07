@@ -66,37 +66,39 @@ export default function FiltrosAnalisis({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4">
-          {/* Selector de Empresa (solo para administradores) */}
-          {esAdministrador && (
-            <div className="space-y-2">
-              <label htmlFor="empresa" className="text-sm font-medium text-foreground">
-                Empresa *
-              </label>
-              <Select 
-                value={empresaSeleccionada} 
-                onValueChange={onEmpresaChange} 
-                disabled={loading}
-              >
-                <SelectTrigger id="empresa" aria-label="Seleccionar empresa">
-                  <SelectValue placeholder="Selecciona una empresa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {empresas.map((empresa) => (
-                    <SelectItem key={empresa.id} value={empresa.id.toString()}>
-                      {empresa.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+        {tipoAnalisis === 'vertical' ? (
+          /* Vista Vertical: Grid responsivo con selectores y botones */
+          <div className="space-y-4">
+            {/* Grid de filtros */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 items-end">
+              {/* Empresa - Ocupa más columnas si es visible */}
+              {esAdministrador && (
+                <div className="space-y-1.5 sm:col-span-2 lg:col-span-2 xl:col-span-3">
+                  <label htmlFor="empresa" className="text-xs font-medium text-foreground">
+                    Empresa *
+                  </label>
+                  <Select 
+                    value={empresaSeleccionada} 
+                    onValueChange={onEmpresaChange} 
+                    disabled={loading}
+                  >
+                    <SelectTrigger id="empresa" aria-label="Seleccionar empresa" className="w-full truncate">
+                      <SelectValue placeholder="Selecciona una empresa" className="truncate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {empresas.map((empresa) => (
+                        <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                          {empresa.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-          {/* Filtros para Análisis Vertical */}
-          {tipoAnalisis === 'vertical' && (
-            <>
-              <div className="space-y-2">
-                <label htmlFor="periodo" className="text-sm font-medium text-foreground">
+              {/* Periodo */}
+              <div className="space-y-1.5">
+                <label htmlFor="periodo" className="text-xs font-medium text-foreground">
                   Periodo *
                 </label>
                 <Select 
@@ -104,8 +106,8 @@ export default function FiltrosAnalisis({
                   onValueChange={onPeriodoChange} 
                   disabled={loading}
                 >
-                  <SelectTrigger id="periodo" aria-label="Seleccionar periodo">
-                    <SelectValue placeholder="Selecciona un periodo" />
+                  <SelectTrigger id="periodo" aria-label="Seleccionar periodo" className="w-full">
+                    <SelectValue placeholder="Año" />
                   </SelectTrigger>
                   <SelectContent>
                     {periodos.map((periodo) => (
@@ -117,19 +119,21 @@ export default function FiltrosAnalisis({
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="seccion" className="text-sm font-medium text-foreground">
+              {/* Sección */}
+              <div className="space-y-1.5 sm:col-span-2 lg:col-span-1 xl:col-span-2">
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor="seccion" className="text-xs font-medium text-foreground">
                     Sección (opcional)
                   </label>
                   {seccionSeleccionada && (
                     <button
                       onClick={() => onSeccionChange(undefined)}
-                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                       disabled={loading}
+                      aria-label="Limpiar sección"
                     >
                       <X className="h-3 w-3" />
-                      Limpiar
+                      <span className="hidden sm:inline">Limpiar</span>
                     </button>
                   )}
                 </div>
@@ -138,7 +142,7 @@ export default function FiltrosAnalisis({
                   onValueChange={onSeccionChange} 
                   disabled={loading}
                 >
-                  <SelectTrigger id="seccion" aria-label="Seleccionar sección">
+                  <SelectTrigger id="seccion" aria-label="Seleccionar sección" className="w-full">
                     <SelectValue placeholder="Todas las secciones" />
                   </SelectTrigger>
                   <SelectContent>
@@ -150,14 +154,65 @@ export default function FiltrosAnalisis({
                   </SelectContent>
                 </Select>
               </div>
-            </>
-          )}
+            </div>
 
-          {/* Filtros para Análisis Horizontal */}
-          {tipoAnalisis === 'horizontal' && (
-            <>
-              <div className="space-y-2">
-                <label htmlFor="periodoBase" className="text-sm font-medium text-foreground">
+            {/* Botones de acción */}
+            <div className="flex flex-wrap justify-center sm:justify-start gap-2 pt-2 border-t">
+              <Button 
+                onClick={onAnalizar} 
+                disabled={!puedeAnalizar || loading}
+                className="flex-1 sm:flex-none min-w-[120px]"
+              >
+                <Search className="mr-2 h-4 w-4" />
+                {loading ? 'Analizando...' : 'Analizar'}
+              </Button>
+              
+              {puedeExportar && (
+                <Button 
+                  onClick={onExportar} 
+                  disabled={!puedeExportar || loading}
+                  variant="outline"
+                  className="flex-1 sm:flex-none min-w-[120px]"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar CSV
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Vista Horizontal: Grid responsivo con selectores y botones */
+          <div className="space-y-4">
+            {/* Grid de filtros */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 items-end">
+              {/* Empresa - Solo para administradores */}
+              {esAdministrador && (
+                <div className="space-y-1.5 sm:col-span-2 lg:col-span-2 xl:col-span-2">
+                  <label htmlFor="empresa-horiz" className="text-xs font-medium text-foreground">
+                    Empresa *
+                  </label>
+                  <Select 
+                    value={empresaSeleccionada} 
+                    onValueChange={onEmpresaChange} 
+                    disabled={loading}
+                  >
+                    <SelectTrigger id="empresa-horiz" aria-label="Seleccionar empresa" className="w-full truncate">
+                      <SelectValue placeholder="Selecciona una empresa" className="truncate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {empresas.map((empresa) => (
+                        <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                          {empresa.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Periodo Base */}
+              <div className="space-y-1.5">
+                <label htmlFor="periodoBase" className="text-xs font-medium text-foreground">
                   Periodo Base *
                 </label>
                 <Select 
@@ -165,8 +220,8 @@ export default function FiltrosAnalisis({
                   onValueChange={onPeriodoBaseChange} 
                   disabled={loading}
                 >
-                  <SelectTrigger id="periodoBase" aria-label="Seleccionar periodo base">
-                    <SelectValue placeholder="Selecciona periodo base" />
+                  <SelectTrigger id="periodoBase" aria-label="Seleccionar periodo base" className="w-full">
+                    <SelectValue placeholder="Base" />
                   </SelectTrigger>
                   <SelectContent>
                     {periodos.map((periodo) => (
@@ -178,8 +233,9 @@ export default function FiltrosAnalisis({
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="periodoComp" className="text-sm font-medium text-foreground">
+              {/* Periodo Comparación */}
+              <div className="space-y-1.5">
+                <label htmlFor="periodoComp" className="text-xs font-medium text-foreground">
                   Periodo Comparación *
                 </label>
                 <Select 
@@ -187,8 +243,8 @@ export default function FiltrosAnalisis({
                   onValueChange={onPeriodoCompChange} 
                   disabled={loading}
                 >
-                  <SelectTrigger id="periodoComp" aria-label="Seleccionar periodo comparación">
-                    <SelectValue placeholder="Selecciona periodo a comparar" />
+                  <SelectTrigger id="periodoComp" aria-label="Seleccionar periodo comparación" className="w-full">
+                    <SelectValue placeholder="Comparar" />
                   </SelectTrigger>
                   <SelectContent>
                     {periodos.map((periodo) => (
@@ -199,32 +255,33 @@ export default function FiltrosAnalisis({
                   </SelectContent>
                 </Select>
               </div>
-            </>
-          )}
+            </div>
 
-          {/* Botones de acción */}
-          <div className="flex gap-2 pt-2">
-            <Button 
-              onClick={onAnalizar} 
-              disabled={!puedeAnalizar || loading}
-              className="flex-1"
-            >
-              <Search className="mr-2 h-4 w-4" />
-              {loading ? 'Analizando...' : 'Analizar'}
-            </Button>
-            
-            {puedeExportar && (
+            {/* Botones de acción */}
+            <div className="flex flex-wrap justify-center sm:justify-start gap-2 pt-2 border-t">
               <Button 
-                onClick={onExportar} 
-                disabled={!puedeExportar || loading}
-                variant="outline"
+                onClick={onAnalizar} 
+                disabled={!puedeAnalizar || loading}
+                className="flex-1 sm:flex-none min-w-[120px]"
               >
-                <Download className="mr-2 h-4 w-4" />
-                Exportar CSV
+                <Search className="mr-2 h-4 w-4" />
+                {loading ? 'Analizando...' : 'Analizar'}
               </Button>
-            )}
+              
+              {puedeExportar && (
+                <Button 
+                  onClick={onExportar} 
+                  disabled={!puedeExportar || loading}
+                  variant="outline"
+                  className="flex-1 sm:flex-none min-w-[120px]"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar CSV
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   )
