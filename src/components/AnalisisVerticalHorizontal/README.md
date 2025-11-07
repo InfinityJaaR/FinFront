@@ -230,11 +230,19 @@ El sistema diferencia automáticamente entre cuentas de submayor y detalle:
 
 #### Estilos Visuales
 
-**Cuentas Submayor:**
+**Cuentas Mayor (Nivel 1):**
 - Fondo gris claro (`bg-gray-50`)
 - Texto en negrita
-- Etiqueta azul "Submayor"
+- Etiqueta morada "Mayor" (`bg-purple-100`)
 - Sin indentación
+- Monto en tamaño de fuente más grande
+- Sin barra de progreso (en análisis vertical)
+
+**Cuentas Submayor (Nivel 2):**
+- Fondo gris claro (`bg-gray-50`)
+- Texto en negrita
+- Etiqueta azul "Submayor" (`bg-blue-100`)
+- Indentación mínima o nivel 1
 - Monto en tamaño de fuente más grande
 - Sin barra de progreso (en análisis vertical)
 
@@ -250,8 +258,8 @@ El sistema diferencia automáticamente entre cuentas de submayor y detalle:
 
 **Con Formato Numérico (4 dígitos):**
 ```
-1000         ACTIVO                          $1,000,000.00  [Submayor - MAYOR]
-  └─ 1100    Activo Corriente                  $600,000.00  [Submayor - SUB_MAYOR]
+1000         ACTIVO                          $1,000,000.00  [Mayor 🟣]
+  └─ 1100    Activo Corriente                  $600,000.00  [Submayor 🔵]
     └─ 1110    Efectivo y Equivalentes         $200,000.00  [Detalle]
       └─ 1111    Caja                            $50,000.00  [Movimiento]
       └─ 1112    Bancos                         $150,000.00  [Movimiento]
@@ -262,8 +270,8 @@ El sistema diferencia automáticamente entre cuentas de submayor y detalle:
 
 **Con Formato de Puntos:**
 ```
-1            ACTIVO                          $1,000,000.00  [Submayor - MAYOR]
-  └─ 1.1     Activo Corriente                  $600,000.00  [Submayor - SUB_MAYOR]
+1            ACTIVO                          $1,000,000.00  [Mayor 🟣]
+  └─ 1.1     Activo Corriente                  $600,000.00  [Submayor 🔵]
     └─ 1.1.1   Efectivo y Equivalentes         $200,000.00  [Detalle]
       └─ 1.1.1.01  Caja                          $50,000.00  [Movimiento]
       └─ 1.1.1.02  Bancos                       $150,000.00  [Movimiento]
@@ -271,6 +279,12 @@ El sistema diferencia automáticamente entre cuentas de submayor y detalle:
       └─ 1.1.2.01  Clientes                     $350,000.00  [Movimiento]
       └─ 1.1.2.02  Deudores                      $50,000.00  [Movimiento]
 ```
+
+**Leyenda:**
+- 🟣 **Mayor** = Morado (`purple`) - Nivel principal (1, 2, 3 o 1000, 2000, 3000)
+- 🔵 **Submayor** = Azul (`blue`) - Nivel secundario (1.1, 1.2 o 1100, 1200)
+- **Detalle** = Sin etiqueta - Cuentas de detalle
+- **Movimiento** = Sin etiqueta - Cuentas de movimiento
 
 ### Colores por Sección
 Los colores se asignan automáticamente según la sección:

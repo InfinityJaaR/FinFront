@@ -69,7 +69,7 @@ export default function TablaAnalisisHorizontal({ datos, periodos = [], loading 
     }
   }
 
-  // Determinar si una cuenta es submayor o detalle
+  // Determinar si una cuenta es submayor o detalle (incluye MAYOR y SUB_MAYOR)
   // Soporta dos formatos de códigos:
   // Formato numérico (4 dígitos): 1000, 1100, 1110, 1111
   // Formato con puntos: 1, 1.1, 1.1.1, 1.1.1.01
@@ -112,6 +112,21 @@ export default function TablaAnalisisHorizontal({ datos, periodos = [], loading 
     
     // Por defecto, no es submayor
     return false
+  }
+
+  // Determinar si una cuenta es MAYOR (nivel 1)
+  const esMayor = (linea) => {
+    const codigo = linea.codigo?.toString().trim() || ''
+    
+    // FORMATO NUMÉRICO (4 dígitos)
+    if (/^\d{4}$/.test(codigo)) {
+      // MAYOR: termina en "000" (ej: 1000, 2000, 3000)
+      return /\d000$/.test(codigo)
+    }
+    
+    // FORMATO CON PUNTOS o un solo dígito
+    // MAYOR: un solo dígito (ej: 1, 2, 3)
+    return /^\d$/.test(codigo)
   }
 
   // Obtener nivel de indentación basado en el código
@@ -272,6 +287,7 @@ export default function TablaAnalisisHorizontal({ datos, periodos = [], loading 
                       const variacionPct = linea.variacion_pct
                       const esVariacionSignificativa = variacionPct !== null && Math.abs(variacionPct) > 0.1 // Mayor al 10%
                       const esCuentaSubmayor = esSubmayor(linea)
+                      const esCuentaMayor = esMayor(linea)
                       const nivelIndentacion = obtenerNivelIndentacion(linea.codigo)
                       
                       return (
@@ -304,8 +320,12 @@ export default function TablaAnalisisHorizontal({ datos, periodos = [], loading 
                                 {linea.nombre}
                               </span>
                               {esCuentaSubmayor && (
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                                  Submayor
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                  esCuentaMayor 
+                                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' 
+                                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                                }`}>
+                                  {esCuentaMayor ? 'Mayor' : 'Submayor'}
                                 </span>
                               )}
                             </div>
