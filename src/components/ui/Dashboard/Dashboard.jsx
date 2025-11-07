@@ -127,9 +127,8 @@ const FinancialDashboard = ({
     {
       icon: BarChart3, // o cualquier ícono que te guste
       label: "Asignación de Catálogo",
-      href: "/dashboard/catalogo/asignacion",
-      roles: ["Administrador", "Analista Financiero"], // o también "Analista Financiero" si quieres
-      permissions: ["gestionar_catalogo_cuentas"]
+      href: "/dashboard/gestion-empresas/asignacion-catalogo",
+      roles: ["Administrador", "Analista Financiero"], // o también "Analista Financiero" si quieres      
     },
 
     {
