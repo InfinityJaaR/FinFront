@@ -15,6 +15,7 @@ import {
   LogOut,
   Shield,
   PieChart,
+  Activity,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import authService from "@/services/auth/authService"
@@ -123,6 +124,13 @@ const FinancialDashboard = ({
       href: "/dashboard/estados-financieros",
       roles: ["Administrador", "Analista Financiero"],
       // permissions: ["ver_transacciones"]
+    },
+    {
+      icon: Activity,
+      label: "Análisis de Balance",
+      href: "/dashboard/analisis-balance",
+      roles: ["Administrador", "Analista Financiero"],
+      permissions: ["analizar_balance"]
     },
 
     {

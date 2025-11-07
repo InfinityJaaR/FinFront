@@ -20,6 +20,7 @@ import EstadosFinancierosPage from './pages/EstadosFinancieros/EstadosFinanciero
 import NuevoEstadoPage from './components/EstadosFinancieros/NuevoEstado';
 import ImportarEstadoPage from './components/EstadosFinancieros/ImportarEstado';
 import BenchmarkPromedio from "@/components/GestionEmpresas/Ratios/BenchmarkPromedio";
+import AnalisisBalancePage from './pages/AnalisisVerticalHorizontal/AnalisisBalance';
 
 import { useParams } from 'react-router-dom';
 
@@ -372,6 +373,16 @@ function App() {
             <Route
               path="estados-financieros/importar"
               element={<ImportarEstadoPage />}
+            />
+
+            {/* Análisis de Balance General (Vertical y Horizontal) */}
+            <Route
+              path="analisis-balance"
+              element={
+                <PermissionRoute requiredPermissions={["analizar_balance"]}>
+                  <AnalisisBalancePage />
+                </PermissionRoute>
+              }
             />
 
             {/* Accesible para todos */}
