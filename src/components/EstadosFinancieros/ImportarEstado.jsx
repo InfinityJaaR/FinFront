@@ -443,11 +443,9 @@ export default function ImportarEstadoPage() {
     setErrorMessage(null)
     try {
       // Convertir códigos a IDs usando el catálogo de cuentas
-      // IMPORTANTE: Solo enviar cuentas NO calculadas (hojas del árbol)
-      // El backend se encargará de calcular las cuentas agregadas
+      // IMPORTANTE: Enviar TODAS las cuentas (calculadas y no calculadas) con su checkbox
       const detalles = []
       const cuentasNoEncontradas = []
-      const cuentasCalculadasOmitidas = []
       
       for (const item of datosPreview) {
         console.log(`Buscando código: ${item.codigo}`)
@@ -459,14 +457,7 @@ export default function ImportarEstadoPage() {
           continue // Omitir esta cuenta en lugar de lanzar error
         }
         
-        // Omitir cuentas calculadas - el backend las calculará
-        if (cuenta.es_calculada) {
-          console.log(`⚠️ Cuenta ${cuenta.codigo} es calculada - se omitirá (backend la calculará)`)
-          cuentasCalculadasOmitidas.push(`${cuenta.codigo} - ${cuenta.nombre}`)
-          continue
-        }
-        
-        console.log(`✓ Encontrada cuenta: ${cuenta.codigo} -> ID: ${cuenta.id}`)
+        console.log(`✓ Encontrada cuenta: ${cuenta.codigo} -> ID: ${cuenta.id} (calculada: ${cuenta.es_calculada})`)
         
         detalles.push({
           catalogo_cuenta_id: cuenta.id,
@@ -479,11 +470,7 @@ export default function ImportarEstadoPage() {
       console.log(`=== RESUMEN ===`)
       console.log(`Total cuentas en preview: ${datosPreview.length}`)
       console.log(`Cuentas a enviar: ${detalles.length}`)
-      console.log(`Cuentas calculadas omitidas (backend las calculará): ${cuentasCalculadasOmitidas.length}`)
       console.log(`Cuentas no encontradas: ${cuentasNoEncontradas.length}`)
-      if (cuentasCalculadasOmitidas.length > 0) {
-        console.log('Cuentas calculadas omitidas:', cuentasCalculadasOmitidas)
-      }
       if (cuentasNoEncontradas.length > 0) {
         console.log('Cuentas no encontradas en catálogo:', cuentasNoEncontradas)
       }
@@ -506,12 +493,6 @@ export default function ImportarEstadoPage() {
       
       // Construir mensaje de éxito
       let descripcion = `El estado financiero se ha guardado correctamente con ${detalles.length} cuenta(s).`
-      if (cuentasCalculadasOmitidas.length > 0) {
-        descripcion += ` ${cuentasCalculadasOmitidas.length} cuenta(s) agregada(s) fueron calculadas automáticamente.`
-      }
-      if (cuentasNoEncontradas.length > 0) {
-        descripcion += ` ${cuentasNoEncontradas.length} cuenta(s) fueron omitidas por no estar en el catálogo.`
-      }
       
       setSuccessMessage({
         title: '¡Estado financiero guardado!',
