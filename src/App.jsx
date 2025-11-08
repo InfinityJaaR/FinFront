@@ -21,6 +21,7 @@ import NuevoEstadoPage from './components/EstadosFinancieros/NuevoEstado';
 import AsignacionCatalogo from "@/components/CatalogoCuentas/AsignacionCatalogo";
 import ImportarEstadoPage from './components/EstadosFinancieros/ImportarEstado';
 import BenchmarkPromedio from "@/components/GestionEmpresas/Ratios/BenchmarkPromedio";
+import BenchmarkRubro from "@/components/GestionEmpresas/Benchmark/BenchmarkRubro";
 
 
 
@@ -172,7 +173,11 @@ function App() {
               element={<BenchmarkPromedio />}
             />
 
-
+            //-- Benchmark por rubro
+            <Route
+              path="/dashboard/benchmark-rubro"
+              element={<BenchmarkRubro />}
+            />
 
             {/* Administradores y Contadores */}
             <Route
