@@ -128,9 +128,14 @@ const FinancialDashboard = ({
       icon: BarChart3, // o cualquier ícono que te guste
       label: "Asignación de Catálogo",
       href: "/dashboard/gestion-empresas/asignacion-catalogo",
-      roles: ["Administrador", "Analista Financiero"], // o también "Analista Financiero" si quieres      
+      roles: ["Administrador", "Analista Financiero"], // 
     },
-
+    {
+      icon: BarChart3,
+      label: "Benchmark por Rubro",
+      href: "/dashboard/benchmark-rubro",
+      roles: ["Administrador", "Analista Financiero"],
+    },
     {
       icon: TrendingUp,
       label: "Inversiones",
