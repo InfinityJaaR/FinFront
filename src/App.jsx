@@ -167,6 +167,7 @@ function App() {
                 </PermissionRoute>
               }
             />
+            
 
             <Route
               path="/dashboard/benchmark-promedio"

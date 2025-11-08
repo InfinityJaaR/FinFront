@@ -15,9 +15,18 @@ import {
   LogOut,
   Shield,
   PieChart,
+  Calculator,
+  Building2,
+  BetweenHorizontalEnd,
+  TrendingUpDown,
+  SquareDivide
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import authService from "@/services/auth/authService"
+
+const user = authService.getCurrentUser();
+const roles = user?.roles?.map(r => r.name) ?? [];
+const empresaId = user?.empresa_id;
 
 const FinancialDashboard = ({
   onLogout,
@@ -103,14 +112,6 @@ const FinancialDashboard = ({
       roles: ["Administrador"]
     },
     {
-      icon: BarChart3,
-      label: "Benchmark promedio",
-      href: "/dashboard/benchmark-promedio",
-      // ajusta permisos/roles si quieres restringirlo:
-      roles: ["Administrador"],
-      permissions: ["ver_ratios"], // <- si manejas este permiso, descomenta
-    },
-    {
       icon: Wallet,
       label: "Catalogo de Cuentas",
       href: "/dashboard/catalogo-cuentas",
@@ -125,13 +126,39 @@ const FinancialDashboard = ({
       // permissions: ["ver_transacciones"]
     },
     {
-      icon: BarChart3, // o cualquier ícono que te guste
+      icon: BetweenHorizontalEnd, // o cualquier ícono que te guste
       label: "Asignación de Catálogo",
       href: "/dashboard/gestion-empresas/asignacion-catalogo",
       roles: ["Administrador", "Analista Financiero"], // 
     },
+        {
+    icon: Calculator,
+    label: "Calculo de Ratios",
+    // Si el usuario es Analista, redirigir automáticamente a su empresa
+    href: roles.includes("Analista Financiero")
+      ? `/dashboard/empresas/${empresaId}/ratios`
+      : "/dashboard/empresas", // O dejar vacío para admin hasta que elija empresa
+    roles: ["Analista Financiero"],
+  },
     {
-      icon: BarChart3,
+    icon: Building2,
+    label: "Comparación Interna",
+    // Si el usuario es Analista, redirigir automáticamente a su empresa
+    href: roles.includes("Analista Financiero")
+      ? `/dashboard/empresas/${empresaId}/ratios/comparaciones`
+      : "/dashboard/empresas", // O dejar vacío para admin hasta que elija empresa
+    roles: ["Analista Financiero"],
+  },
+      {
+      icon: SquareDivide,
+      label: "Benchmark promedio",
+      href: "/dashboard/benchmark-promedio",
+      // ajusta permisos/roles si quieres restringirlo:
+      roles: ["Administrador"],
+      permissions: ["ver_ratios"], // <- si manejas este permiso, descomenta
+    },
+    {
+      icon: TrendingUpDown,
       label: "Benchmark por Rubro",
       href: "/dashboard/benchmark-rubro",
       roles: ["Administrador", "Analista Financiero"],
