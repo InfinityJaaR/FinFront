@@ -125,6 +125,14 @@ const FinancialDashboard = ({
       roles: ["Administrador", "Analista Financiero"],
       // permissions: ["ver_transacciones"]
     },
+    // Proyecciones ahora viven dentro de "Ventas Mensuales"
+    {
+      icon: BarChart3,
+      label: "Ventas Mensuales",
+      href: "/dashboard/gestion-empresas/ventas-mensuales",
+      roles: ["Administrador", "Analista Financiero"],
+      permissions: ["ver_proyecciones"],
+    },
     {
       icon: BetweenHorizontalEnd, // o cualquier ícono que te guste
       label: "Asignación de Catálogo",
