@@ -18,6 +18,7 @@ import RatiosEmpresa from './pages/GestionEmpresas/Ratios/RatiosEmpresa';
 import ComparacionesInternasPage from "./pages/GestionEmpresas/Ratios/ComparacionesInternasPage";
 import EstadosFinancierosPage from './pages/EstadosFinancieros/EstadosFinancieros';
 import NuevoEstadoPage from './components/EstadosFinancieros/NuevoEstado';
+import NuevoEstadoManualPage from './components/EstadosFinancieros/NuevoEstadoManual';
 import ImportarEstadoPage from './components/EstadosFinancieros/ImportarEstado';
 import BenchmarkPromedio from "@/components/GestionEmpresas/Ratios/BenchmarkPromedio";
 import AnalisisBalancePage from './pages/AnalisisVerticalHorizontal/AnalisisBalance';
@@ -370,6 +371,10 @@ function App() {
             <Route
               path="estados-financieros/nuevo"
               element={<NuevoEstadoPage />}
+            />
+            <Route
+              path="estados-financieros/nuevo-manual"
+              element={<NuevoEstadoManualPage />}
             />
             <Route
               path="estados-financieros/importar"
