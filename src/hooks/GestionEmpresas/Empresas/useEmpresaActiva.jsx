@@ -21,7 +21,8 @@ const useEmpresaActiva = () => {
   const [error, setError] = useState(null)
 
   const role = getUserRole()
-  const isLocked = role === 'Analista Financiero'
+  // Considerar variantes del rol de analista ("Analista", "Analista Financiero", mayúsculas/minúsculas)
+  const isLocked = /analista/i.test(role || '')
 
   // Helpers para obtener empresa desde distintos formatos del user
   const extractEmpresaFromUser = (u) => {
@@ -189,7 +190,7 @@ const useEmpresaActiva = () => {
 
     const uEmpresa = extractEmpresaFromUser(user)
 
-    if (role === 'Analista Financiero') {
+    if (isLocked) {
       // Forzar empresa del analista
       if (!uEmpresa) {
         // Si no viene la empresa en el user, intentar obtener por un campo id conocido
@@ -202,6 +203,18 @@ const useEmpresaActiva = () => {
             persistEmpresaId(loaded?.id)
             setIsLoading(false)
           })()
+        } else {
+          // Fallback: si hay empresa persistida en localStorage, cargarla
+          const persistedId = readPersistedId()
+          if (persistedId) {
+            ;(async () => {
+              setIsLoading(true)
+              const loaded = await loadEmpresaById(Number(persistedId))
+              setEmpresaActivaState(loaded)
+              persistEmpresaId(loaded?.id)
+              setIsLoading(false)
+            })()
+          }
         }
       } else {
         // Si uEmpresa es sólo {id}, cargar completo
@@ -228,6 +241,7 @@ const useEmpresaActiva = () => {
     setEmpresaActivaState(null)
     fetchEmpresas()
   }, [authLoading, user, role, fetchEmpresas, loadEmpresaById])
+  // Nota: dependemos de `role` pero el lock real usa `isLocked`; si el rol cambia en caliente, se re-ejecuta.
 
   // Escuchar cambios externos (storage/custom) para sincronizar entre instancias
   useEffect(() => {
