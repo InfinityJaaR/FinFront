@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Badge } from "../ui/badge"
-import { TrendingUp, TrendingDown } from "lucide-react"
 
 /**
  * Componente para mostrar tabla de análisis vertical
@@ -170,6 +169,43 @@ export default function TablaAnalisisVertical({ datos, loading = false }) {
     return acc
   }, {})
 
+  // Obtener nivel de importancia según el porcentaje
+  const obtenerNivelImportancia = (porcentaje) => {
+    const porcentajeAbs = Math.abs(porcentaje)
+    if (porcentajeAbs >= 0.20) return 'muy-alta'
+    if (porcentajeAbs >= 0.10) return 'alta'
+    if (porcentajeAbs >= 0.05) return 'media'
+    return 'baja'
+  }
+
+  // Configuración de colores para indicadores
+  const configuracionIndicadores = {
+    'muy-alta': { 
+      size: 'w-4 h-4', 
+      color: 'bg-purple-600', 
+      label: 'Muy alta',
+      rango: '≥20%'
+    },
+    'alta': { 
+      size: 'w-3 h-3', 
+      color: 'bg-blue-600', 
+      label: 'Alta',
+      rango: '10-19%'
+    },
+    'media': { 
+      size: 'w-2.5 h-2.5', 
+      color: 'bg-green-600', 
+      label: 'Media',
+      rango: '5-9%'
+    },
+    'baja': { 
+      size: 'w-2 h-2', 
+      color: 'bg-gray-300', 
+      label: 'Baja',
+      rango: '<5%'
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Resumen de Totales */}
@@ -201,6 +237,17 @@ export default function TablaAnalisisVertical({ datos, loading = false }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Leyenda de Indicadores */}
+      <div className="flex items-center justify-center gap-6 text-sm text-gray-600">
+        <span className="font-medium">Participación:</span>
+        {Object.entries(configuracionIndicadores).map(([key, config]) => (
+          <div key={key} className="flex items-center gap-1.5">
+            <div className={`${config.size} ${config.color} rounded-full`} />
+            <span>{config.label}</span>
+          </div>
+        ))}
+      </div>
 
       {/* Tabla de Análisis Vertical por Sección */}
       {Object.entries(lineasPorSeccion).map(([seccion, lineas]) => (
@@ -301,22 +348,19 @@ export default function TablaAnalisisVertical({ datos, loading = false }) {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          {!esCuentaSubmayor && (
-                            <div className="flex items-center justify-center gap-2">
-                              {/* Barra de progreso visual */}
-                              <div className="flex-1 max-w-[200px]">
-                                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-primary transition-all duration-300"
-                                    style={{ width: `${Math.min(Math.abs(porcentaje) * 100, 100)}%` }}
-                                  />
-                                </div>
+                          {!esCuentaSubmayor && (() => {
+                            const nivel = obtenerNivelImportancia(linea.porcentaje)
+                            const config = configuracionIndicadores[nivel]
+                            
+                            return (
+                              <div className="flex items-center justify-center">
+                                <div 
+                                  className={`${config.size} ${config.color} rounded-full`}
+                                  title={`${config.label}: ${config.rango}`}
+                                />
                               </div>
-                              {esSignificativo && (
-                                <TrendingUp className="h-4 w-4 text-primary" />
-                              )}
-                            </div>
-                          )}
+                            )
+                          })()}
                         </td>
                       </tr>
                     )
