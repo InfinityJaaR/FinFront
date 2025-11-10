@@ -7,13 +7,21 @@ import { useModal } from '@/context/ModalContext'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import Button from '@/components/ui/Button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Pencil, Trash2, RefreshCw, Eye } from 'lucide-react'
+import { Pencil, Trash2, Eye, Download } from 'lucide-react'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 // Componentes antiguos de proyecciones integrados aquí (lista y detalle)
 // import ProyeccionList from '@/pages/GestionEmpresas/Proyecciones/ProyeccionList'
 // import ProyeccionDetailsModal from '@/pages/GestionEmpresas/Proyecciones/ProyeccionDetailsModal'
 
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const STALE_KEY = (empresaId, year) => `ventas_stale_${empresaId}_${year}`
+const METHOD_LABELS = {
+  minimos_cuadrados: 'Mínimos Cuadrados',
+  incremento_porcentual: 'Incremento Porcentual',
+  incremento_absoluto: 'Incremento Absoluto',
+}
+const methodLabel = (m) => METHOD_LABELS[m] || m
 
 const SimpleLine = ({ series, width=800, height=220, colors=['#2563eb','#059669','#ef4444'] }) => {
   // series: [{ name, data: number[12] }]
@@ -44,7 +52,7 @@ const SimpleLine = ({ series, width=800, height=220, colors=['#2563eb','#059669'
       {/* hover capture + tooltip */}
       {MESES.map((_,i)=>{
         const x = pad + i*xStep
-        const onEnter = (e)=>{
+        const onEnter = ()=>{
           const tooltipX = x
           const tooltipY = pad + 10
           setHover({ i, x: tooltipX, y: tooltipY })
@@ -80,6 +88,7 @@ const YearDetail = () => {
   const [tab, setTab] = useState('meses') // 'meses' | 'proy'
   const [proyecciones, setProyecciones] = useState([])
   const [loadingProy, setLoadingProy] = useState(false)
+  const [toast, setToast] = useState(null) // { type: 'success'|'error', message, ts }
 
   const complete = rows.length === 12
   const total = rows.reduce((a,x)=> a + Number(x.monto||0), 0)
@@ -119,10 +128,10 @@ const YearDetail = () => {
   useEffect(() => { if (tab === 'proy') loadProys() }, [tab])
 
   const markStale = () => {
-    try { localStorage.setItem(STALE_KEY(empresaActiva.id, year), '1') } catch {}
+    try { localStorage.setItem(STALE_KEY(empresaActiva.id, year), '1') } catch (e) { console.debug('localStorage.setItem failed', e) }
   }
-  const clearStale = () => { try { localStorage.removeItem(STALE_KEY(empresaActiva.id, year)) } catch {} }
-  const isStale = () => { try { return !!localStorage.getItem(STALE_KEY(empresaActiva.id, year)) } catch { return false } }
+  const clearStale = () => { try { localStorage.removeItem(STALE_KEY(empresaActiva.id, year)) } catch (e) { console.debug('localStorage.removeItem failed', e) } }
+  const isStale = () => { try { return !!localStorage.getItem(STALE_KEY(empresaActiva.id, year)) } catch (e) { console.debug('localStorage.getItem failed', e); return false } }
 
   const [editing, setEditing] = useState(null) // mes en edición
   const handleChange = (mes, val) => {
@@ -200,10 +209,71 @@ const YearDetail = () => {
       const det = details[p.id]
       if (!det) continue
       const data = det.map(x => Number(x.monto_proyectado || x.monto || 0))
-      s.push({ name: p.metodo_usado || p.metodo, data })
+      s.push({ name: methodLabel(p.metodo_usado || p.metodo), data })
     }
     return s
   }, [proyecciones, details])
+
+  const downloadProjectionPdf = async (p) => {
+    try {
+      const d = await ProyeccionesService.verProyeccion(empresaActiva.id, p.id)
+      const periodo = d?.proyeccion?.periodo_proyectado ?? d?.periodo_proyectado ?? (displayYear+1)
+      const metodo = methodLabel(d?.proyeccion?.metodo_usado ?? d?.metodo_usado ?? (p.metodo_usado || p.metodo))
+      const detallesRaw = (d?.detalles || d?.data?.detalles || [])
+      const items = detallesRaw.map(it => ({ mes: Number(it.mes), monto: Number(it.monto_proyectado || it.monto || 0) }))
+      const empresaNombre = empresaActiva?.nombre || 'Empresa'
+      const ahora = new Date()
+      const timestamp = `${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}-${String(ahora.getDate()).padStart(2,'0')} ${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}`
+
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+      const margin = 40
+      let y = margin
+
+      doc.setFontSize(16)
+      doc.text(`Proyección ${periodo}`, margin, y)
+      doc.setFontSize(12)
+      y += 18
+      doc.text(empresaNombre, margin, y)
+      y += 16
+      doc.setFontSize(10)
+      doc.setTextColor(80)
+      doc.text(`Método: ${metodo}`, margin, y)
+      y += 14
+      doc.text(`Generado: ${timestamp}`, margin, y)
+      y += 14
+      doc.text(`Fuente: Ventas ${displayYear}`, margin, y)
+      doc.setTextColor(0)
+
+      const body = (items.length ? items : Array.from({length:12},(_,i)=>({mes:i+1,monto:0}))).map(it => [
+        `${String(it.mes).padStart(2,'0')} · ${MESES[it.mes-1] || ''}`,
+        (it.monto ?? 0).toLocaleString()
+      ])
+      const total = items.reduce((a,x)=>a+(x.monto||0),0)
+
+      autoTable(doc, {
+        head: [['Mes', 'Monto proyectado']],
+        body,
+        foot: [['Total', total.toLocaleString()]],
+        startY: y + 16,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [249, 250, 251], textColor: 55 },
+        columnStyles: {
+          0: { halign: 'left' },
+          1: { halign: 'right' },
+        },
+        footStyles: { fontStyle: 'bold' },
+        margin: { left: margin, right: margin },
+      })
+
+      const safePeriodo = String(periodo)
+      doc.save(`Proyeccion_${safePeriodo}.pdf`)
+      setToast({ type: 'success', message: `PDF descargado: Proyección ${safePeriodo}`, ts: Date.now() })
+    } catch (err) {
+      const msg = err?.response?.data?.message || err.message
+      setToast({ type: 'error', message: `Error al generar PDF: ${msg}`, ts: Date.now() })
+      await alert({ title: 'Error', message: msg })
+    }
+  }
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-4">
@@ -218,6 +288,19 @@ const YearDetail = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {toast && (
+            <div
+              className={`mb-4 px-3 py-2 rounded text-xs flex items-center gap-2 shadow transition-opacity duration-300 ${toast.type==='success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}
+              role="status"
+            >
+              <span>{toast.message}</span>
+              <button
+                onClick={()=>setToast(null)}
+                className="ml-auto text-[10px] uppercase tracking-wide hover:underline"
+                aria-label="Cerrar notificación"
+              >Cerrar</button>
+            </div>
+          )}
           <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList>
               <TabsTrigger value="meses">Meses</TabsTrigger>
@@ -306,7 +389,7 @@ const YearDetail = () => {
                     <table className="w-full text-sm text-left text-gray-500">
                       <caption className="p-5 text-base font-semibold text-left text-gray-900 bg-white">
                         Proyecciones generadas
-                        <p className="mt-1 text-xs font-normal text-gray-500">Lista de proyecciones para el año {displayYear+1}. Use los botones para ver el detalle o eliminar.</p>
+                        <p className="mt-1 text-xs font-normal text-gray-500">Lista de proyecciones para el año {displayYear+1}. Use los botones para ver, descargar o eliminar.</p>
                       </caption>
                       <thead className="text-xs uppercase bg-gray-50 text-gray-700">
                         <tr>
@@ -324,7 +407,7 @@ const YearDetail = () => {
                         )}
                         {!loadingProy && proyecciones.map(p => (
                           <tr key={p.id} className="bg-white border-b border-gray-200 hover:bg-gray-50">
-                            <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{p.metodo_usado}</th>
+                            <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{methodLabel(p.metodo_usado || p.metodo)}</th>
                             <td className="px-6 py-4 text-xs text-gray-500">{p.periodo_proyectado || p.periodo}</td>
                             <td className="px-6 py-4 text-right">
                               <div className="flex justify-end items-center gap-2">
@@ -340,6 +423,16 @@ const YearDetail = () => {
                                   className="cursor-pointer"
                                 >
                                   <Eye className="size-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  aria-label="Descargar PDF"
+                                  onClick={()=>downloadProjectionPdf(p)}
+                                  className="cursor-pointer"
+                                  title="Descargar PDF"
+                                >
+                                  <Download className="size-4" />
                                 </Button>
                                 <Button
                                   onClick={async()=>{ await ProyeccionesService.eliminarProyeccion(empresaActiva.id, p.id); await loadProys() }}
