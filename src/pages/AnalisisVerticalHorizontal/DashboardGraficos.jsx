@@ -61,6 +61,19 @@ export default function DashboardGraficos() {
     return `${(valor * 100).toFixed(2)}%`
   }
 
+  const formatearSeccion = (seccion) => {
+    switch (seccion) {
+      case 'ACTIVO':
+        return 'Activo'
+      case 'PASIVO':
+        return 'Pasivo'
+      case 'PATRIMONIO':
+        return 'Patrimonio'
+      default:
+        return seccion || 'N/A'
+    }
+  }
+
   // Determinar si es cuenta submayor o mayor
   const esSubmayor = (linea) => {
     if (linea.es_calculada !== undefined) {
@@ -86,21 +99,57 @@ export default function DashboardGraficos() {
     return false
   }
 
+  // Determinar si es cuenta de mayor (ACTIVO, PASIVO, PATRIMONIO)
+  const esCuentaMayor = (linea) => {
+    const codigo = linea.codigo?.toString().trim() || ''
+    
+    // Formato numérico: termina en "000" (ej: 1000, 2000, 3000)
+    if (/^\d{4}$/.test(codigo)) {
+      if (/\d000$/.test(codigo)) return true
+      return false
+    }
+    
+    // Formato con puntos: un solo dígito (ej: 1, 2, 3)
+    if (codigo.includes('.')) {
+      const partes = codigo.split('.')
+      if (partes.length === 1 && /^\d$/.test(codigo)) return true
+      return false
+    }
+    
+    // Un solo dígito sin punto (ej: 1, 2, 3)
+    if (/^\d$/.test(codigo)) return true
+    
+    return false
+  }
+
+  // Paleta de colores para los gráficos de barras
+  const coloresBarra = [
+    '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981',
+    '#06b6d4', '#6366f1', '#f43f5e', '#14b8a6', '#84cc16',
+    '#a855f7', '#fb923c', '#22d3ee', '#facc15', '#4ade80'
+  ]
+
   // Preparar datos para el análisis de cuentas principales
   const prepararDatosPrincipales = () => {
     if (!datosAnalisis?.lineas) return []
     
-    // Obtener cuentas no calculadas con mayor participación (top 10)
+    // Incluir todas las cuentas (detalle y subcuentas de mayor) excepto cuentas de mayor (ACTIVO, PASIVO, PATRIMONIO)
     const lineasPrincipales = datosAnalisis.lineas
-      .filter(linea => !esSubmayor(linea))
+      .filter(linea => 
+        linea.seccion && 
+        (linea.seccion === 'ACTIVO' || linea.seccion === 'PASIVO' || linea.seccion === 'PATRIMONIO') &&
+        !esCuentaMayor(linea)
+      )
       .sort((a, b) => Math.abs(b.porcentaje || 0) - Math.abs(a.porcentaje || 0))
       .slice(0, 10)
     
-    return lineasPrincipales.map(linea => ({
+    return lineasPrincipales.map((linea, index) => ({
       nombre: linea.nombre.length > 30 ? linea.nombre.substring(0, 27) + '...' : linea.nombre,
       porcentaje: (linea.porcentaje || 0) * 100,
       monto: linea.monto,
-      nombreCompleto: linea.nombre
+      nombreCompleto: linea.nombre,
+      seccion: linea.seccion || 'N/A',
+      color: coloresBarra[index % coloresBarra.length]
     }))
   }
 
@@ -108,9 +157,9 @@ export default function DashboardGraficos() {
   const prepararDatosSeccion = (seccion) => {
     if (!datosAnalisis?.lineas) return []
     
-    // Filtrar líneas de la sección y obtener solo las cuentas no calculadas
+    // Incluir todas las cuentas de la sección (detalle y subcuentas de mayor) excepto cuentas de mayor
     const lineasSeccion = datosAnalisis.lineas
-      .filter(linea => linea.seccion === seccion && !esSubmayor(linea))
+      .filter(linea => linea.seccion === seccion && !esCuentaMayor(linea))
       .sort((a, b) => Math.abs(b.porcentaje || 0) - Math.abs(a.porcentaje || 0))
       .slice(0, 15) // Top 15 cuentas
     
@@ -138,7 +187,7 @@ export default function DashboardGraficos() {
               <BarChart3 className="h-8 w-8 text-primary" />
               <div>
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                  Dashboard de Gráficos
+                  Análisis gráfico del balance general
                 </h1>
                 <p className="text-muted-foreground">
                   Visualización gráfica del análisis vertical del balance general
@@ -158,14 +207,10 @@ export default function DashboardGraficos() {
 
         {/* Tabs con estilo toggle similar a AnalisisBalance */}
         <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-auto">
+          <TabsList className="grid w-full grid-cols-4 h-auto">
             <TabsTrigger value="general" className="gap-2 py-3">
               <Layers className="h-4 w-4" />
               General
-            </TabsTrigger>
-            <TabsTrigger value="participacion" className="gap-2 py-3">
-              <TrendingUp className="h-4 w-4" />
-              Participación
             </TabsTrigger>
             <TabsTrigger value="activo" className="gap-2 py-3">
               <BarChart3 className="h-4 w-4" />
@@ -183,38 +228,6 @@ export default function DashboardGraficos() {
 
           {/* Tab General - Estado de las cuentas */}
           <TabsContent value="general" className="mt-6 space-y-6">
-            {/* Totales por Sección */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Resumen General del Balance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-2 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                    <p className="text-sm font-medium text-muted-foreground">Total Activo</p>
-                    <p className="text-2xl font-bold text-blue-600">
-                      {formatearMoneda(datosAnalisis?.totales?.ACTIVO || 0)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Recursos de la empresa</p>
-                  </div>
-                  <div className="space-y-2 p-4 bg-red-50 dark:bg-red-950 rounded-lg">
-                    <p className="text-sm font-medium text-muted-foreground">Total Pasivo</p>
-                    <p className="text-2xl font-bold text-red-600">
-                      {formatearMoneda(datosAnalisis?.totales?.PASIVO || 0)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Obligaciones de la empresa</p>
-                  </div>
-                  <div className="space-y-2 p-4 bg-green-50 dark:bg-green-950 rounded-lg">
-                    <p className="text-sm font-medium text-muted-foreground">Total Patrimonio</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {formatearMoneda(datosAnalisis?.totales?.PATRIMONIO || 0)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Capital de los propietarios</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Distribución del Balance */}
             <Card>
               <CardHeader>
@@ -248,6 +261,14 @@ export default function DashboardGraficos() {
                         highlightScope: { faded: 'global', highlighted: 'item' },
                         faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
                         valueFormatter: (item) => formatearMoneda(item.value),
+                        arcLabel: (item) => {
+                          const totalBalance = (datosAnalisis?.totales?.ACTIVO || 0) + 
+                                              (datosAnalisis?.totales?.PASIVO || 0) + 
+                                              (datosAnalisis?.totales?.PATRIMONIO || 0)
+                          const porcentaje = totalBalance > 0 ? (item.value / totalBalance * 100) : 0
+                          return `${porcentaje.toFixed(1)}%`
+                        },
+                        arcLabelMinAngle: 20,
                         innerRadius: 60,
                         outerRadius: 140,
                         paddingAngle: 2,
@@ -272,35 +293,7 @@ export default function DashboardGraficos() {
               </CardContent>
             </Card>
 
-            {/* Estadísticas rápidas */}
-            <Card className="bg-muted/50">
-              <CardContent className="pt-6">
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Total de Cuentas</p>
-                    <p className="text-3xl font-bold">{datosAnalisis?.lineas?.length || 0}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Razón de Deuda</p>
-                    <p className="text-3xl font-bold">
-                      {formatearPorcentaje(
-                        datosAnalisis?.totales?.PASIVO / (datosAnalisis?.totales?.ACTIVO || 1)
-                      )}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Apalancamiento</p>
-                    <p className="text-3xl font-bold">
-                      {(datosAnalisis?.totales?.PASIVO / (datosAnalisis?.totales?.PATRIMONIO || 1)).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab Análisis de Participación */}
-          <TabsContent value="participacion" className="mt-6 space-y-6">
+            {/* Cuentas con Mayor Participación - Gráfico */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -310,66 +303,57 @@ export default function DashboardGraficos() {
               </CardHeader>
               <CardContent>
                 {datosPrincipales.length > 0 ? (
-                  <>
-                    <Box sx={{ width: '100%', overflowX: 'auto', mb: 4 }}>
-                      <BarChart
-                        xAxis={[
-                          { 
-                            scaleType: 'band', 
-                            data: datosPrincipales.map(d => d.nombre),
-                            tickLabelStyle: {
-                              angle: -45,
-                              textAnchor: 'end',
-                              fontSize: 11,
+                  <Box sx={{ width: '100%', overflowY: 'auto', mb: 0}}>
+                    <BarChart
+                      xAxis={[
+                        { 
+                          scaleType: 'band', 
+                          data: datosPrincipales.map(d => d.nombre),
+                          label: 'Cuentas',
+                          tickLabelStyle: {
+                            angle: -45,
+                            textAnchor: 'end',
+                            fontSize: 11,
+                          }
+                        }
+                      ]}
+                      yAxis={[
+                        {
+                          label: 'Participación (%)'
+                        }
+                      ]}
+                      series={[
+                        {
+                          data: datosPrincipales.map(cuenta => cuenta.porcentaje),
+                          label: 'Participación (%)',
+                          color: '#3366FF',
+                          valueFormatter: (value) => value ? `${value.toFixed(2)}%` : '',
+                        }
+                      ]}
+                      width={1000}
+                      height={400}
+                      margin={{ bottom: 60, left: 80 }}
+                      barCategoryGap={0.2}
+                      grid={{ horizontal: false, vertical: false }}
+                      slotProps={{
+                        legend: {
+                          direction: 'row',
+                          position: { vertical: 'top', horizontal: 'center' },
+                          padding: { bottom: 20 },
+                        },
+                        tooltip: {
+                          content: ({ itemData, axisValue }) => {
+                            if (!itemData || itemData.value === null || itemData.value === undefined) {
+                              return null
                             }
+                            const value = typeof itemData.value === 'number' ? itemData.value : parseFloat(itemData.value)
+                            if (isNaN(value)) return null
+                            return `${value.toFixed(2)}%`
                           }
-                        ]}
-                        series={[
-                          { 
-                            data: datosPrincipales.map(d => d.porcentaje),
-                            label: 'Participación (%)',
-                            valueFormatter: (value) => `${value.toFixed(2)}%`,
-                            color: '#2563eb'
-                          }
-                        ]}
-                        width={1000}
-                        height={400}
-                        margin={{ bottom: 120, left: 60 }}
-                      />
-                    </Box>
-                    
-                    {/* Tabla de detalles */}
-                    <div className="mt-6 overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                              Cuenta
-                            </th>
-                            <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                              Monto
-                            </th>
-                            <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                              Participación
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {datosPrincipales.map((cuenta, index) => (
-                            <tr key={index} className="border-b hover:bg-muted/50">
-                              <td className="px-4 py-3 text-sm">{cuenta.nombreCompleto}</td>
-                              <td className="px-4 py-3 text-sm text-right font-medium">
-                                {formatearMoneda(cuenta.monto)}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-right font-semibold text-primary">
-                                {cuenta.porcentaje.toFixed(2)}%
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
+                        }
+                      }}
+                    />
+                  </Box>
                 ) : (
                   <Alert severity="info">
                     No hay datos suficientes para mostrar el análisis
@@ -377,6 +361,55 @@ export default function DashboardGraficos() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Tabla de detalles de las cuentas principales */}
+            {datosPrincipales.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Detalle de Participación</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-y-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                            Cuenta
+                          </th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                            Sección
+                          </th>
+                          <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                            Monto
+                          </th>
+                          <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                            Participación
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {datosPrincipales.map((cuenta, index) => (
+                          <tr key={index} className="border-b hover:bg-muted/50">
+                            <td className="px-4 py-3 text-sm">
+                              {cuenta.nombreCompleto}
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              {formatearSeccion(cuenta.seccion)}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-right font-medium">
+                              {formatearMoneda(cuenta.monto)}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-right font-semibold text-primary">
+                              {cuenta.porcentaje.toFixed(2)}%
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Tab Activo */}
@@ -401,11 +434,17 @@ export default function DashboardGraficos() {
                         { 
                           scaleType: 'band', 
                           data: datosActivo.categorias,
+                          label: 'Cuentas de Activo',
                           tickLabelStyle: {
                             angle: -45,
                             textAnchor: 'end',
                             fontSize: 11,
                           }
+                        }
+                      ]}
+                      yAxis={[
+                        {
+                          label: 'Participación (%)'
                         }
                       ]}
                       series={[
@@ -418,7 +457,7 @@ export default function DashboardGraficos() {
                       ]}
                       width={1000}
                       height={450}
-                      margin={{ bottom: 120, left: 60 }}
+                      margin={{ bottom: 60, left: 80 }}
                     />
                   </Box>
                 ) : (
@@ -452,11 +491,17 @@ export default function DashboardGraficos() {
                         { 
                           scaleType: 'band', 
                           data: datosPasivo.categorias,
+                          label: 'Cuentas de Pasivo',
                           tickLabelStyle: {
                             angle: -45,
                             textAnchor: 'end',
                             fontSize: 11,
                           }
+                        }
+                      ]}
+                      yAxis={[
+                        {
+                          label: 'Participación (%)'
                         }
                       ]}
                       series={[
@@ -469,7 +514,7 @@ export default function DashboardGraficos() {
                       ]}
                       width={1000}
                       height={450}
-                      margin={{ bottom: 120, left: 60 }}
+                      margin={{ bottom: 60, left: 80 }}
                     />
                   </Box>
                 ) : (
@@ -503,11 +548,17 @@ export default function DashboardGraficos() {
                         { 
                           scaleType: 'band', 
                           data: datosPatrimonio.categorias,
+                          label: 'Cuentas de Patrimonio',
                           tickLabelStyle: {
                             angle: -45,
                             textAnchor: 'end',
                             fontSize: 11,
                           }
+                        }
+                      ]}
+                      yAxis={[
+                        {
+                          label: 'Participación (%)'
                         }
                       ]}
                       series={[
@@ -520,7 +571,7 @@ export default function DashboardGraficos() {
                       ]}
                       width={1000}
                       height={450}
-                      margin={{ bottom: 120, left: 60 }}
+                      margin={{ bottom: 60, left: 80 }}
                     />
                   </Box>
                 ) : (
@@ -549,10 +600,10 @@ export default function DashboardGraficos() {
               <div className="space-y-2">
                 <h3 className="font-semibold flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-green-600" />
-                  Participación
+                  Análisis por Secciones
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Identifica las cuentas con mayor peso en la estructura financiera de la empresa.
+                  Explora en detalle la composición de Activo, Pasivo y Patrimonio de forma individual.
                 </p>
               </div>
               <div className="space-y-2">
