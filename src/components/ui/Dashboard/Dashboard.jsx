@@ -15,10 +15,18 @@ import {
   LogOut,
   Shield,
   PieChart,
-  Activity,
+  Calculator,
+  Building2,
+  BetweenHorizontalEnd,
+  TrendingUpDown,
+  SquareDivide
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import authService from "@/services/auth/authService"
+
+const user = authService.getCurrentUser();
+const roles = user?.roles?.map(r => r.name) ?? [];
+const empresaId = user?.empresa_id;
 
 const FinancialDashboard = ({
   onLogout,
@@ -85,47 +93,76 @@ const FinancialDashboard = ({
     {
       icon: TrendingUp, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Rubros",
-      href: "/dashboard/rubros",
+      href: "/dashboard/gestion-empresas/rubros",
       permissions: ["gestionar_rubros"],
       roles: ["Administrador"]
     },
     {
       icon: Wallet, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Empresas",
-      href: "/dashboard/empresas",
+      href: "/dashboard/gestion-empresas/empresas",
       permissions: ["gestionar_empresas"],
       roles: ["Administrador"]
     },
     {
       icon: CreditCard, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Ratios",
-      href: "/dashboard/definicion-ratios",
+      href: "/dashboard/gestion-empresas/definicion-ratios",
       permissions: ["gestionar_ratios_definicion"],
       roles: ["Administrador"]
     },
     {
       icon: Wallet,
-      label: "Cuentas",
-      href: "/dashboard/accounts",
-      badge: 3,
+      label: "Catalogo de Cuentas",
+      href: "/dashboard/catalogo-cuentas",
       roles: ["Administrador", "Analista Financiero"], // Solo estos roles pueden ver
       // permissions: ["ver_cuentas"] // Opcional: también puedes agregar permisos
     },
     {
-      icon: CreditCard,
-      label: "Transacciones",
-      href: "/dashboard/transactions",
-      roles: ["Administrador", "Inversor"],
+      icon: BarChart3,
+      label: "Estados Financieros",
+      href: "/dashboard/estados-financieros",
+      roles: ["Administrador", "Analista Financiero"],
       // permissions: ["ver_transacciones"]
     },
     {
-      icon: Activity,
-      label: "Análisis de Balance",
-      href: "/dashboard/analisis-balance",
-      roles: ["Administrador", "Analista Financiero"],
-      permissions: ["analizar_balance"]
+      icon: BetweenHorizontalEnd, // o cualquier ícono que te guste
+      label: "Asignación de Catálogo",
+      href: "/dashboard/gestion-empresas/asignacion-catalogo",
+      roles: ["Administrador", "Analista Financiero"], // 
     },
-
+        {
+    icon: Calculator,
+    label: "Calculo de Ratios",
+    // Si el usuario es Analista, redirigir automáticamente a su empresa
+    href: roles.includes("Analista Financiero")
+      ? `/dashboard/empresas/${empresaId}/ratios`
+      : "/dashboard/empresas", // O dejar vacío para admin hasta que elija empresa
+    roles: ["Analista Financiero"],
+  },
+    {
+    icon: Building2,
+    label: "Comparación Interna",
+    // Si el usuario es Analista, redirigir automáticamente a su empresa
+    href: roles.includes("Analista Financiero")
+      ? `/dashboard/empresas/${empresaId}/ratios/comparaciones`
+      : "/dashboard/empresas", // O dejar vacío para admin hasta que elija empresa
+    roles: ["Analista Financiero"],
+  },
+      {
+      icon: SquareDivide,
+      label: "Benchmark promedio",
+      href: "/dashboard/benchmark-promedio",
+      // ajusta permisos/roles si quieres restringirlo:
+      roles: ["Administrador"],
+      permissions: ["ver_ratios"], // <- si manejas este permiso, descomenta
+    },
+    {
+      icon: TrendingUpDown,
+      label: "Benchmark por Rubro",
+      href: "/dashboard/benchmark-rubro",
+      roles: ["Administrador", "Analista Financiero"],
+    },
     {
       icon: TrendingUp,
       label: "Inversiones",
