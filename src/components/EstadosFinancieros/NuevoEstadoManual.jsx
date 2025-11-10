@@ -133,6 +133,7 @@ export default function NuevoEstadoManualPage() {
   const [successMessage, setSuccessMessage] = useState({ title: "", description: "" })
   const [existingEstado, setExistingEstado] = useState(null)
   const [checkingEstado, setCheckingEstado] = useState(false)
+  const [mostrarErroresMontos, setMostrarErroresMontos] = useState(false)
 
   useEffect(() => {
     cargarEmpresas()
@@ -148,6 +149,7 @@ export default function NuevoEstadoManualPage() {
       setCatalogoCuentas([])
       setMontos({})
       setUsarEnRatios({})
+      setMostrarErroresMontos(false)
       setExistingEstado(null)
       return
     }
@@ -163,6 +165,7 @@ export default function NuevoEstadoManualPage() {
         setCatalogoCuentas(cuentas)
         setMontos({})
         setUsarEnRatios({})
+        setMostrarErroresMontos(false)
       } catch (error) {
         console.error("Error al cargar catálogo:", error)
         setCatalogError("No fue posible cargar el catálogo de cuentas para la empresa seleccionada.")
@@ -179,6 +182,7 @@ export default function NuevoEstadoManualPage() {
     if (!empresa || !periodo || !tipoEstado) {
       setExistingEstado(null)
       setCheckingEstado(false)
+      setMostrarErroresMontos(false)
       return
     }
 
@@ -370,18 +374,76 @@ export default function NuevoEstadoManualPage() {
     empresa &&
     periodo &&
     tipoEstado &&
-    !faltanMontos &&
     !saving &&
     !loadingCatalogo &&
     !checkingEstado &&
     cuentasDisponibles.length > 0 &&
-    !balanceDescuadrado
+    (!balanceDescuadrado || faltanMontos)
+
+  const handleKeyDown = (event) => {
+    // Permitir teclas de control (backspace, delete, tab, escape, enter, etc.)
+    if (
+      event.key === "Backspace" ||
+      event.key === "Delete" ||
+      event.key === "Tab" ||
+      event.key === "Escape" ||
+      event.key === "Enter" ||
+      event.key === "ArrowLeft" ||
+      event.key === "ArrowRight" ||
+      event.key === "ArrowUp" ||
+      event.key === "ArrowDown" ||
+      event.key === "Home" ||
+      event.key === "End"
+    ) {
+      return
+    }
+
+    // Permitir Ctrl/Cmd + A, C, V, X (copiar, pegar, cortar, seleccionar todo)
+    if ((event.ctrlKey || event.metaKey) && (event.key === "a" || event.key === "c" || event.key === "v" || event.key === "x")) {
+      return
+    }
+
+    // Permitir números
+    if (event.key >= "0" && event.key <= "9") {
+      return
+    }
+
+    // Permitir punto, coma y signo negativo solo si no están ya presentes o el negativo está al inicio
+    const currentValue = event.target.value
+    const selectionStart = event.target.selectionStart || 0
+
+    if (event.key === "." && !currentValue.includes(".")) {
+      return
+    }
+
+    if (event.key === "," && !currentValue.includes(",")) {
+      return
+    }
+
+    if (event.key === "-" && selectionStart === 0 && !currentValue.startsWith("-")) {
+      return
+    }
+
+    // Bloquear cualquier otro carácter
+    event.preventDefault()
+  }
 
   const handleMontoChange = (cuentaId, value) => {
     if (formError) setFormError(null)
+    
+    // Filtrar solo números, puntos, comas y signo negativo
+    let valorFiltrado = value.replace(/[^0-9.,-]/g, "")
+    
+    // Asegurar que el signo negativo solo esté al inicio (si existe)
+    if (valorFiltrado.includes("-")) {
+      const tieneSignoNegativo = valorFiltrado.startsWith("-")
+      const sinSignos = valorFiltrado.replace(/-/g, "")
+      valorFiltrado = tieneSignoNegativo ? "-" + sinSignos : sinSignos
+    }
+    
     setMontos((prev) => ({
       ...prev,
-      [cuentaId]: value,
+      [cuentaId]: valorFiltrado,
     }))
   }
 
@@ -398,6 +460,7 @@ export default function NuevoEstadoManualPage() {
     setUsarEnRatios({})
     setBusqueda("")
     setFormError(null)
+    setMostrarErroresMontos(false)
   }
 
   const construirDetalles = () => {
@@ -440,6 +503,8 @@ export default function NuevoEstadoManualPage() {
   }
 
   const handleGuardar = async () => {
+    setMostrarErroresMontos(true)
+
     if (!empresa || !periodo || !tipoEstado) {
       setFormError("Selecciona empresa, periodo y tipo de estado antes de guardar.")
       return
@@ -725,7 +790,7 @@ export default function NuevoEstadoManualPage() {
                       const estaVacio = valor === "" || valor === undefined || valor === null
                       const esInvalido = !estaVacio && (montoParsed === null || Number.isNaN(montoParsed)) && valor !== "-"
                       const hayError = esInvalido
-                      const requiereMonto = estaVacio && tipoEstado
+                      const requiereMonto = mostrarErroresMontos && estaVacio && tipoEstado
 
                       return (
                         <tr key={cuenta.id} className="border-b last:border-0">
@@ -740,6 +805,7 @@ export default function NuevoEstadoManualPage() {
                               placeholder="0"
                               value={valor}
                               onChange={(event) => handleMontoChange(cuenta.id, event.target.value)}
+                              onKeyDown={handleKeyDown}
                               disabled={saving}
                               className={`text-right font-medium ${
                                 hayError
