@@ -101,7 +101,8 @@ const parseMonto = (valor) => {
   return Number.isFinite(numero) ? numero : null
 }
 
-export default function NuevoEstadoManualPage() {
+export default function NuevoEstadoManualPage(props) {
+  const { modo = "crear", estadoId = null } = props || {}
   const navigate = useNavigate()
   const {
     empresas,
@@ -134,6 +135,10 @@ export default function NuevoEstadoManualPage() {
   const [existingEstado, setExistingEstado] = useState(null)
   const [checkingEstado, setCheckingEstado] = useState(false)
   const [mostrarErroresMontos, setMostrarErroresMontos] = useState(false)
+  const [detallesIniciales, setDetallesIniciales] = useState(null)
+  const [loadingInicial, setLoadingInicial] = useState(modo === "editar")
+
+  const isEdicion = modo === "editar"
 
   useEffect(() => {
     cargarEmpresas()
@@ -150,7 +155,9 @@ export default function NuevoEstadoManualPage() {
       setMontos({})
       setUsarEnRatios({})
       setMostrarErroresMontos(false)
-      setExistingEstado(null)
+      if (!isEdicion) {
+        setExistingEstado(null)
+      }
       return
     }
 
@@ -176,9 +183,86 @@ export default function NuevoEstadoManualPage() {
     }
 
     cargarCatalogo()
-  }, [empresa])
+  }, [empresa, isEdicion])
 
   useEffect(() => {
+    if (!isEdicion || !detallesIniciales || !catalogoCuentas.length) {
+      return
+    }
+
+    const montosPreCargados = {}
+    const ratiosPreCargados = {}
+
+    detallesIniciales.forEach((detalle) => {
+      const cuentaId = detalle.catalogo_cuenta_id || detalle.catalogo_cuenta?.id
+      if (!cuentaId) return
+
+      montosPreCargados[cuentaId] = sanitizeMonto(detalle.monto)
+      ratiosPreCargados[cuentaId] = Boolean(detalle.usar_en_ratios)
+    })
+
+    setMontos(montosPreCargados)
+    setUsarEnRatios(ratiosPreCargados)
+    setMostrarErroresMontos(false)
+    setDetallesIniciales(null)
+  }, [isEdicion, detallesIniciales, catalogoCuentas])
+
+  useEffect(() => {
+    if (!isEdicion || !estadoId) {
+      setLoadingInicial(false)
+      return
+    }
+
+    const cargarEstadoExistente = async () => {
+      try {
+        setLoadingInicial(true)
+        const idNumerico = Number(estadoId)
+        const response = await obtenerEstado(idNumerico)
+
+        const estado =
+          response?.success && response?.data
+            ? Array.isArray(response.data)
+              ? response.data[0]
+              : response.data
+            : null
+
+        if (!estado) {
+          setFormError("No se encontró el estado financiero que intentas editar.")
+          setExistingEstado(null)
+          return
+        }
+
+        setExistingEstado(estado)
+        setEmpresa(estado.empresa_id ? estado.empresa_id.toString() : "")
+        setPeriodo(estado.periodo_id ? estado.periodo_id.toString() : "")
+        const tipoNormalizado =
+          estado.tipo === "BALANCE"
+            ? "balance"
+            : estado.tipo === "RESULTADOS"
+            ? "resultados"
+            : ""
+        setTipoEstado(tipoNormalizado)
+        setDetallesIniciales(estado.detalles || [])
+        setSuccessMessage({ title: "", description: "" })
+      } catch (error) {
+        console.error("Error al cargar el estado a editar:", error)
+        setFormError(
+          error?.response?.data?.message ||
+            "No fue posible cargar el estado financiero para edición."
+        )
+        setExistingEstado(null)
+      } finally {
+        setLoadingInicial(false)
+      }
+    }
+
+    cargarEstadoExistente()
+  }, [isEdicion, estadoId, obtenerEstado])
+
+  useEffect(() => {
+    if (isEdicion) {
+      return
+    }
     if (!empresa || !periodo || !tipoEstado) {
       setExistingEstado(null)
       setCheckingEstado(false)
@@ -220,7 +304,7 @@ export default function NuevoEstadoManualPage() {
     return () => {
       cancelado = true
     }
-  }, [empresa, periodo, tipoEstado, obtenerEstado])
+  }, [empresa, periodo, tipoEstado, obtenerEstado, isEdicion])
 
   const cuentasDisponibles = useMemo(() => {
     if (!catalogoCuentas || catalogoCuentas.length === 0) return []
@@ -377,6 +461,7 @@ export default function NuevoEstadoManualPage() {
     !saving &&
     !loadingCatalogo &&
     !checkingEstado &&
+    !loadingInicial &&
     cuentasDisponibles.length > 0 &&
     (!balanceDescuadrado || faltanMontos)
 
@@ -570,9 +655,13 @@ export default function NuevoEstadoManualPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Ingreso Manual</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              {isEdicion ? "Editar Estado Financiero" : "Ingreso Manual"}
+            </h1>
             <p className="text-muted-foreground">
-              Registra manualmente los montos de cada cuenta para crear un nuevo estado financiero.
+              {isEdicion
+                ? "Actualiza los montos registrados para este estado financiero."
+                : "Registra manualmente los montos de cada cuenta para crear un nuevo estado financiero."}
             </p>
           </div>
         </div>
@@ -587,7 +676,11 @@ export default function NuevoEstadoManualPage() {
         <Card>
           <CardHeader>
             <CardTitle>Información General</CardTitle>
-            <CardDescription>Selecciona los datos base antes de ingresar los montos.</CardDescription>
+            <CardDescription>
+              {isEdicion
+                ? "Los datos generales provienen del estado financiero seleccionado."
+                : "Selecciona los datos base antes de ingresar los montos."}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-3">
@@ -599,7 +692,7 @@ export default function NuevoEstadoManualPage() {
                     if (formError) setFormError(null)
                     setEmpresa(value)
                   }}
-                  disabled={loadingEstados || saving}
+                  disabled={loadingEstados || saving || isEdicion || loadingInicial}
                 >
                   <SelectTrigger id="empresa">
                     <SelectValue placeholder="Selecciona una empresa" />
@@ -622,7 +715,7 @@ export default function NuevoEstadoManualPage() {
                     if (formError) setFormError(null)
                     setPeriodo(value)
                   }}
-                  disabled={loadingEstados || saving}
+                  disabled={loadingEstados || saving || isEdicion || loadingInicial}
                 >
                   <SelectTrigger id="periodo">
                     <SelectValue placeholder="Selecciona un periodo" />
@@ -645,7 +738,12 @@ export default function NuevoEstadoManualPage() {
                     if (formError) setFormError(null)
                     setTipoEstado(value)
                   }}
-                  disabled={loadingEstados || saving || loadingCatalogo || !catalogoCuentas.length}
+                  disabled={
+                    loadingEstados ||
+                    saving ||
+                    loadingInicial ||
+                    (isEdicion ? true : loadingCatalogo || !catalogoCuentas.length)
+                  }
                 >
                   <SelectTrigger id="tipoEstado">
                     <SelectValue placeholder="Selecciona el tipo" />
@@ -664,7 +762,7 @@ export default function NuevoEstadoManualPage() {
                 variant="outline"
                 size="sm"
                 onClick={resetFormulario}
-                disabled={saving || (!hayCambios && !busqueda)}
+                disabled={saving || (!hayCambios && !busqueda) || isEdicion}
                 className="gap-2"
               >
                 <RefreshCcw className="h-4 w-4" />
@@ -680,26 +778,36 @@ export default function NuevoEstadoManualPage() {
           </CardContent>
         </Card>
 
-        {(checkingEstado || existingEstado) && (
-          <Alert
-            className={`border-amber-300 bg-amber-50 text-amber-900 ${
-              checkingEstado ? "opacity-80" : ""
-            }`}
-          >
+        {isEdicion ? (
+          <Alert className="border-emerald-300 bg-emerald-50 text-emerald-900">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>
-              {checkingEstado
-                ? "Verificando estados existentes…"
-                : "Ya existe un estado financiero para este periodo"}
-            </AlertTitle>
+            <AlertTitle>Estás editando un estado existente</AlertTitle>
             <AlertDescription>
-              {checkingEstado
-                ? "Estamos comprobando si ya registraste un estado para esta empresa y periodo."
-                : `Al guardar, se actualizará el estado de ${
-                    tipoEstado === "balance" ? "Balance General" : "Estado de Resultados"
-                  } correspondiente al periodo seleccionado.`}
+              Los cambios que realices reemplazarán los montos registrados previamente para este estado financiero.
             </AlertDescription>
           </Alert>
+        ) : (
+          (checkingEstado || existingEstado) && (
+            <Alert
+              className={`border-amber-300 bg-amber-50 text-amber-900 ${
+                checkingEstado ? "opacity-80" : ""
+              }`}
+            >
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>
+                {checkingEstado
+                  ? "Verificando estados existentes…"
+                  : "Ya existe un estado financiero para este periodo"}
+              </AlertTitle>
+              <AlertDescription>
+                {checkingEstado
+                  ? "Estamos comprobando si ya registraste un estado para esta empresa y periodo."
+                  : `Al guardar, se actualizará el estado de ${
+                      tipoEstado === "balance" ? "Balance General" : "Estado de Resultados"
+                    } correspondiente al periodo seleccionado.`}
+              </AlertDescription>
+            </Alert>
+          )
         )}
 
         <Card>
@@ -746,19 +854,21 @@ export default function NuevoEstadoManualPage() {
           </CardHeader>
 
           <CardContent>
-            {(!empresa || !periodo || !tipoEstado) && (
+            {(!empresa || !periodo || !tipoEstado || loadingInicial) && (
               <div className="flex min-h-[200px] items-center justify-center text-center text-sm text-muted-foreground">
-                Selecciona empresa, periodo y tipo de estado para comenzar a ingresar montos.
+                {loadingInicial
+                  ? "Cargando información del estado financiero…"
+                  : "Selecciona empresa, periodo y tipo de estado para comenzar a ingresar montos."}
               </div>
             )}
 
-            {empresa && tipoEstado && !loadingCatalogo && cuentasDisponibles.length === 0 && (
+            {empresa && tipoEstado && !loadingCatalogo && !loadingInicial && cuentasDisponibles.length === 0 && (
               <div className="flex min-h-[200px] items-center justify-center text-center text-sm text-muted-foreground">
                 No se encontraron cuentas base en el catálogo para los filtros aplicados.
               </div>
             )}
 
-            {tipoEstado && cuentasDisponibles.length > 0 && (
+            {tipoEstado && cuentasDisponibles.length > 0 && !loadingInicial && (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-sm">
                   <thead>
@@ -875,7 +985,7 @@ export default function NuevoEstadoManualPage() {
           </Button>
           <Button onClick={handleGuardar} disabled={!puedeGuardar} className="gap-2">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Guardar Estado
+            {isEdicion ? "Actualizar Estado" : "Guardar Estado"}
           </Button>
         </div>
       </div>
