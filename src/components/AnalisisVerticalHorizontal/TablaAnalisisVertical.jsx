@@ -345,15 +345,6 @@ export default function TablaAnalisisVertical({ datos, loading = false }) {
                             <span className={esCuentaSubmayor ? 'font-bold' : ''}>
                               {linea.nombre}
                             </span>
-                            {esCuentaSubmayor && (
-                              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                esCuentaMayor 
-                                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' 
-                                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                              }`}>
-                                {esCuentaMayor ? 'Mayor' : 'Submayor'}
-                              </span>
-                            )}
                           </div>
                         </td>
                         <td className={`px-4 py-3 text-sm text-right ${
