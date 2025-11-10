@@ -26,6 +26,8 @@ import AnalisisBalancePage from "./pages/AnalisisVerticalHorizontal/AnalisisBala
 import DashboardGraficos from "./pages/AnalisisVerticalHorizontal/DashboardGraficos";
 import NuevoEstadoManualPage from "./components/EstadosFinancieros/NuevoEstadoManual";
 import EditarEstadoFinancieroPage from "./components/EstadosFinancieros/EditarEstado";
+import VentasYearList from './pages/GestionEmpresas/Ventas/YearList';
+import VentasYearDetail from './pages/GestionEmpresas/Ventas/YearDetail';
 
 
 
@@ -366,6 +368,24 @@ function App() {
                 element={
                   <PermissionRoute requiredPermissions={["gestionar_ratios_definicion"]}>
                     <RatioFormPage />
+                  </PermissionRoute>
+                }
+              />
+              {/* Proyecciones integradas en Ventas Mensuales (ruta dedicada eliminada) */}
+              {/* Ventas mensuales */}
+              <Route
+                path="ventas-mensuales"
+                element={
+                  <PermissionRoute requiredPermissions={["ver_proyecciones"]}>
+                    <VentasYearList />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="ventas-mensuales/:year"
+                element={
+                  <PermissionRoute requiredPermissions={["ver_proyecciones"]}>
+                    <VentasYearDetail />
                   </PermissionRoute>
                 }
               />
