@@ -80,11 +80,6 @@ function PermissionRoute({ requiredPermissions, children }) {
   return children
 }
 
-function EmpRatiosWrapper() {
-  const { empresaId } = useParams();
-  return <RatiosEmpresa empresaId={empresaId} />;
-}
-
 function App() {
   // Estado local que se sincroniza con localStorage
   const [auth, setAuth] = useState(isAuthenticated())
@@ -116,7 +111,6 @@ function App() {
 
   return (
     <Router>
-      <ModalProvider>
       <Routes>
         {/* Ruta pública para login en "/" */}
         <Route
@@ -149,30 +143,6 @@ function App() {
                 </RoleRoute>
               }
             />
-
-              <Route
-              path="empresas/:empresaId/ratios"
-              element={
-                <PermissionRoute requiredPermissions={["ver_ratios"]}>
-                  <EmpRatiosWrapper />
-                </PermissionRoute>
-              }
-              />
-                         
-            <Route
-              path="empresas/:empresaId/ratios/comparaciones"
-              element={
-                <PermissionRoute requiredPermissions={["ver_ratios"]}>
-                  <ComparacionesInternasPage />
-                </PermissionRoute>
-              }
-            />
-
-            <Route
-              path="/dashboard/benchmark-promedio"
-              element={<BenchmarkPromedio />}
-            />
-
 
 
             {/* Administradores y Contadores */}
@@ -241,125 +211,27 @@ function App() {
                 </RoleRoute>
               }
             />
-            {/* Grupo: Gestión de empresas (listas + formularios) */}
-            <Route path="gestion-empresas">
-              {/* Empresas */}
-              <Route
-                path="empresas"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_empresas"]}>
-                    <EmpresaPage />
-                  </PermissionRoute>
-                }
-              />
-              <Route
-                path="empresas/create"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_empresas"]}>
-                    <EmpresaFormPage />
-                  </PermissionRoute>
-                }
-              />
-              <Route
-                path="empresas/:id"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_empresas"]}>
-                    <EmpresaFormPage />
-                  </PermissionRoute>
-                }
-              />
-              <Route
-                path="empresas/:id/edit"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_empresas"]}>
-                    <EmpresaFormPage />
-                  </PermissionRoute>
-                }
-              />
-
-              {/* Rubros */}
-              <Route
-                path="rubros"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_rubros"]}>
-                    <RubrosPage />
-                  </PermissionRoute>
-                }
-              />
-              <Route
-                path="rubros/create"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_rubros"]}>
-                    <RubroFormPage />
-                  </PermissionRoute>
-                }
-              />
-              <Route
-                path="rubros/:id"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_rubros"]}>
-                    <RubroFormPage />
-                  </PermissionRoute>
-                }
-              />
-              <Route
-                path="rubros/:id/edit"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_rubros"]}>
-                    <RubroFormPage />
-                  </PermissionRoute>
-                }
-              />
-
-              {/* Definición de Ratios */}
-              <Route
-                path="definicion-ratios"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_ratios_definicion"]}>
-                    <RatiosPage />
-                  </PermissionRoute>
-                }
-              />
-              <Route
-                path="definicion-ratios/create"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_ratios_definicion"]}>
-                    <RatioFormPage />
-                  </PermissionRoute>
-                }
-              />
-              <Route
-                path="definicion-ratios/:id"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_ratios_definicion"]}>
-                    <RatioFormPage />
-                  </PermissionRoute>
-                }
-              />
-              <Route
-                path="definicion-ratios/:id/edit"
-                element={
-                  <PermissionRoute requiredPermissions={["gestionar_ratios_definicion"]}>
-                    <RatioFormPage />
-                  </PermissionRoute>
-                }
-              />
-            </Route>
-
             <Route
-              path="catalogo-cuentas"
+              path="rubros"
               element={
-                <PermissionRoute requiredPermissions={["gestionar_catalogo_cuentas"]}>
-                  <CatalogoPage />
+                <PermissionRoute requiredPermissions={["gestionar_rubros"]}>
+                  <RubrosPage />
                 </PermissionRoute>
               }
             />
-
-            <Route
-              path="catalogo-cuentas/nuevo"
+             <Route
+              path="empresas"
               element={
-                <PermissionRoute requiredPermissions={["gestionar_catalogo_cuentas"]}>
-                  <NuevoCatalogoPage />
+                <PermissionRoute requiredPermissions={["gestionar_empresas"]}>
+                  <EmpresaPage />
+                </PermissionRoute>
+              }
+            />
+             <Route
+              path="definicion-ratios"
+              element={
+                <PermissionRoute requiredPermissions={["gestionar_ratios_definicion"]}>
+                  <RatiosPage />
                 </PermissionRoute>
               }
             />
@@ -444,7 +316,6 @@ function App() {
           }
         />
       </Routes>
-      </ModalProvider>
     </Router>
   )
 }

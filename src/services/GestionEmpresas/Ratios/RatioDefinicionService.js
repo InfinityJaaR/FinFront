@@ -27,12 +27,11 @@ class RatioDefinicionService {
      */
     async getAllRatios(page = 1, search = '') {
         try {
-            const query = `?page=${page}${search ? `&search=${search}` : ''}`;
-            const response = await axios.get(`${RATIOS_API_URL}${query}`, {
+            const response = await axios.get(`${url}ratios/definiciones`, {
                 headers: getAuthHeaders(),
             });
-            // El controlador retorna { success: true, data: data_paginada }
-            return response.data.data; 
+            // devuelve { success, data: [...] }
+            return response.data.data || []; 
         } catch (error) {
             // Loguear detalle de la respuesta del servidor si existe para facilitar el debugging
             if (error.response && error.response.data) {

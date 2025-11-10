@@ -1,0 +1,163 @@
+/* ======== CONTENEDOR PRINCIPAL ======== */
+.benchmark-container {
+  background-color: #f8fbff;
+  min-height: 100vh;
+  padding: 2rem 3rem;
+  font-family: "Inter", sans-serif;
+}
+
+/* ======== ENCABEZADO ======== */
+.benchmark-header {
+  margin-bottom: 1rem;
+}
+
+.benchmark-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.3rem;
+}
+
+.benchmark-header p {
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* ======== FILTROS ======== */
+.benchmark-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.benchmark-filters select {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.9rem;
+  min-width: 230px;
+  background-color: #ffffff;
+  color: #334155;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.benchmark-filters select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  outline: none;
+}
+
+.benchmark-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.55rem 1.2rem;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.benchmark-btn:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.benchmark-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.benchmark-alert {
+  color: #dc2626;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* ======== CONTENEDOR DE TABLA ======== */
+.benchmark-table-container {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.benchmark-table-header {
+  background-color: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.9rem 1.3rem;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.benchmark-table-header span b {
+  color: #0f172a;
+}
+
+/* ======== TABLA ======== */
+.benchmark-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.benchmark-table th {
+  background-color: #f8fafc;
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #475569;
+  font-weight: 700;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.benchmark-table td {
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
+.benchmark-table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* ======== DESTACAR EMPRESA ANALISTA ======== */
+.benchmark-highlight {
+  background-color: #fff9c2 !important;
+}
+
+/* ======== BADGES ======== */
+.badge {
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge-green {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.badge-red {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge-gray {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+/* ======== MENSAJE SIN DATOS ======== */
+.benchmark-empty {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  padding: 1rem;
+}

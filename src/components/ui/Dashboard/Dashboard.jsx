@@ -85,44 +85,37 @@ const FinancialDashboard = ({
     {
       icon: TrendingUp, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Rubros",
-      href: "/dashboard/gestion-empresas/rubros",
+      href: "/dashboard/rubros",
       permissions: ["gestionar_rubros"],
       roles: ["Administrador"]
     },
     {
       icon: Wallet, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Empresas",
-      href: "/dashboard/gestion-empresas/empresas",
+      href: "/dashboard/empresas",
       permissions: ["gestionar_empresas"],
       roles: ["Administrador"]
     },
     {
       icon: CreditCard, // Opcional: DollarSign o PieChart, TrendingUp es relevante para sector/ratios
       label: "Ratios",
-      href: "/dashboard/gestion-empresas/definicion-ratios",
+      href: "/dashboard/definicion-ratios",
       permissions: ["gestionar_ratios_definicion"],
       roles: ["Administrador"]
     },
     {
-      icon: BarChart3,
-      label: "Benchmark promedio",
-      href: "/dashboard/benchmark-promedio",
-      // ajusta permisos/roles si quieres restringirlo:
-      roles: ["Administrador", "Analista Financiero"],
-      permissions: ["ver_ratios"], // <- si manejas este permiso, descomenta
-    },
-    {
       icon: Wallet,
-      label: "Catalogo de Cuentas",
-      href: "/dashboard/catalogo-cuentas",
+      label: "Cuentas",
+      href: "/dashboard/accounts",
+      badge: 3,
       roles: ["Administrador", "Analista Financiero"], // Solo estos roles pueden ver
       // permissions: ["ver_cuentas"] // Opcional: también puedes agregar permisos
     },
     {
-      icon: BarChart3,
-      label: "Estados Financieros",
-      href: "/dashboard/estados-financieros",
-      roles: ["Administrador", "Analista Financiero"],
+      icon: CreditCard,
+      label: "Transacciones",
+      href: "/dashboard/transactions",
+      roles: ["Administrador", "Inversor"],
       // permissions: ["ver_transacciones"]
     },
     {
