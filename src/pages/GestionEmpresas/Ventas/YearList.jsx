@@ -96,6 +96,7 @@ const YearList = () => {
 
   return (
     <div className="w-full max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold tracking-tight text-foreground mb-6">Proyección de Ventas</h1>
       <div className="relative overflow-x-auto shadow-md sm:rounded-lg bg-white">
         <table className="w-full text-sm text-left text-gray-500">
           <caption className="p-5 text-lg font-semibold text-left text-gray-900 bg-white">
@@ -140,7 +141,7 @@ const YearList = () => {
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end items-center gap-2">
                       <Button onClick={() => navigate(`/dashboard/gestion-empresas/ventas-mensuales/${y}`)} variant="outline" size="sm" className="cursor-pointer bg-black text-white hover:text-black">Gestionar Año</Button>
-                      <Button onClick={() => handleDeleteYear(y)} variant="danger" size="icon" aria-label={`Eliminar ${y}`}>
+                      <Button onClick={() => handleDeleteYear(y)} variant="danger" size="icon" aria-label={`Eliminar ${y}`} className="cursor-pointer">
                         <Trash2 className="size-4" />
                       </Button>
                     </div>

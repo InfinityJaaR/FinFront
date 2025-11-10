@@ -19,7 +19,8 @@ import {
   Building2,
   BetweenHorizontalEnd,
   TrendingUpDown,
-  SquareDivide
+  SquareDivide,
+  ChartNoAxesCombined
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import authService from "@/services/auth/authService"
@@ -125,10 +126,10 @@ const FinancialDashboard = ({
       roles: ["Administrador", "Analista Financiero"],
       // permissions: ["ver_transacciones"]
     },
-    // Proyecciones ahora viven dentro de "Ventas Mensuales"
+    // Proyecciones ahora viven dentro de "Proyección de ventas"
     {
-      icon: BarChart3,
-      label: "Ventas Mensuales",
+      icon: ChartNoAxesCombined,
+      label: "Proyección de Ventas",
       href: "/dashboard/gestion-empresas/ventas-mensuales",
       roles: ["Administrador", "Analista Financiero"],
       permissions: ["ver_proyecciones"],

@@ -225,8 +225,8 @@ const YearDetail = () => {
             </TabsList>
             <TabsContent value="meses" className="mt-4 space-y-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <Button onClick={saveAll} variant="primary" size="sm">Guardar cambios</Button>
-                <Button onClick={deleteYear} variant="danger" size="sm">Eliminar año</Button>
+                <Button onClick={saveAll} variant="primary" size="sm" className="cursor-pointer">Guardar cambios</Button>
+                <Button onClick={deleteYear} variant="danger" size="sm" className="cursor-pointer">Eliminar año</Button>
               </div>
               <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
                 <table className="w-full text-sm text-left text-gray-500">
@@ -267,8 +267,8 @@ const YearDetail = () => {
                                 <Pencil className="size-4" />
                               </Button>
                               {(r.id || r.monto) && (
-                                <Button onClick={()=>deleteMonth(r, label)} variant="danger" size="icon" aria-label={`Eliminar ${label}`}>
-                                  <Trash2 className="size-4" />
+                                <Button onClick={()=>deleteMonth(r, label)} variant="danger" size="icon" aria-label={`Eliminar ${label}`} className="cursor-pointer">
+                                  <Trash2 className="size-4"/>
                                 </Button>
                               )}
                             </div>
@@ -299,41 +299,70 @@ const YearDetail = () => {
               <Card>
                 <CardHeader className="flex items-center justify-between">
                   <CardTitle>Proyecciones {displayYear+1}</CardTitle>
-                  <Button onClick={loadProys} variant="outline" size="sm"><RefreshCw className="mr-2 size-4"/>Recargar</Button>
+                  <Button onClick={loadProys} variant="outline" size="sm" className="cursor-pointer bg-black text-white hover:text-black">Recargar</Button>
                 </CardHeader>
                 <CardContent>
-                  {loadingProy? <div>Cargando...</div> : (
-                    proyecciones.length === 0 ? <div className="text-sm text-gray-500">Sin proyecciones.</div> : (
-                      <ul className="text-sm divide-y">
-                        {proyecciones.map(p => (
-                          <li key={p.id} className="flex items-center justify-between py-2">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{p.metodo_usado}</span>
-                              <span className="text-gray-500">{p.periodo_proyectado || p.periodo}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="secondary" size="icon" aria-label="Ver" onClick={async()=>{
-                                const d = await ProyeccionesService.verProyeccion(empresaActiva.id, p.id)
-                                setViewData(d)
-                                setViewOpen(true)
-                              }}>
-                                <Eye className="size-4" />
-                              </Button>
-                              <Button onClick={async()=>{ await ProyeccionesService.eliminarProyeccion(empresaActiva.id, p.id); await loadProys() }} variant="danger" size="icon" aria-label="Borrar">
-                                <Trash2 className="size-4" />
-                              </Button>
-                            </div>
-                          </li>
+                  <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+                    <table className="w-full text-sm text-left text-gray-500">
+                      <caption className="p-5 text-base font-semibold text-left text-gray-900 bg-white">
+                        Proyecciones generadas
+                        <p className="mt-1 text-xs font-normal text-gray-500">Lista de proyecciones para el año {displayYear+1}. Use los botones para ver el detalle o eliminar.</p>
+                      </caption>
+                      <thead className="text-xs uppercase bg-gray-50 text-gray-700">
+                        <tr>
+                          <th scope="col" className="px-6 py-3">Método</th>
+                          <th scope="col" className="px-6 py-3">Año</th>
+                          <th scope="col" className="px-6 py-3"><span className="sr-only">Acciones</span></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loadingProy && (
+                          <tr><td colSpan={3} className="px-6 py-4">Cargando...</td></tr>
+                        )}
+                        {!loadingProy && proyecciones.length === 0 && (
+                          <tr><td colSpan={3} className="px-6 py-6 text-center text-gray-500">Sin proyecciones</td></tr>
+                        )}
+                        {!loadingProy && proyecciones.map(p => (
+                          <tr key={p.id} className="bg-white border-b border-gray-200 hover:bg-gray-50">
+                            <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{p.metodo_usado}</th>
+                            <td className="px-6 py-4 text-xs text-gray-500">{p.periodo_proyectado || p.periodo}</td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex justify-end items-center gap-2">
+                                <Button
+                                  variant="secondary"
+                                  size="icon"
+                                  aria-label="Ver"
+                                  onClick={async()=>{
+                                    const d = await ProyeccionesService.verProyeccion(empresaActiva.id, p.id)
+                                    setViewData(d)
+                                    setViewOpen(true)
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <Eye className="size-4" />
+                                </Button>
+                                <Button
+                                  onClick={async()=>{ await ProyeccionesService.eliminarProyeccion(empresaActiva.id, p.id); await loadProys() }}
+                                  variant="danger"
+                                  size="icon"
+                                  aria-label="Borrar"
+                                  className="cursor-pointer"
+                                >
+                                  <Trash2 className="size-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
                         ))}
-                      </ul>
-                    )
-                  )}
+                      </tbody>
+                    </table>
+                  </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex items-center justify-between">
                   <CardTitle>Comparador ({displayYear+1})</CardTitle>
-                  <Button onClick={loadDetails} variant="outline" size="sm"><RefreshCw className="mr-2 size-4"/>Cargar series</Button>
+                  <Button onClick={loadDetails} variant="outline" size="sm" className="cursor-pointer bg-black text-white hover:text-black">Cargar series</Button>
                 </CardHeader>
                 <CardContent>
                   {loadingDetails ? <div>Cargando...</div> : (
