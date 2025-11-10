@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+import { Button } from "../ui/button"
 import { useEstadosFinancieros } from "../../hooks/EstadosFinancieros/useEstadosFinancieros"
 
 const formatCurrency = (value) => {
@@ -14,8 +16,10 @@ const calcularTotal = (items) => {
 }
 
 export default function BalanceGeneral({ empresaId, periodoId }) {
+  const navigate = useNavigate()
   const { obtenerEstado, loading } = useEstadosFinancieros()
   const [datos, setDatos] = useState(null)
+  const [estadoActual, setEstadoActual] = useState(null)
 
   useEffect(() => {
     if (empresaId && periodoId) {
@@ -33,13 +37,16 @@ export default function BalanceGeneral({ empresaId, periodoId }) {
 
       if (response.success && response.data.length > 0) {
         const estado = response.data[0]
+        setEstadoActual(estado)
         procesarDatos(estado)
       } else {
         setDatos(null)
+        setEstadoActual(null)
       }
     } catch (error) {
       console.error('Error al cargar balance:', error)
       setDatos(null)
+      setEstadoActual(null)
     }
   }
 
@@ -137,8 +144,21 @@ export default function BalanceGeneral({ empresaId, periodoId }) {
   console.log('Total Pasivos + Patrimonio:', totalPasivosPatrimonio)
   console.log('Diferencia con Activos:', totalActivos - totalPasivosPatrimonio)
 
+  const handleEditar = () => {
+    if (!estadoActual?.id) return
+    navigate(`/dashboard/estados-financieros/${estadoActual.id}/editar`)
+  }
+
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="space-y-4">
+      {estadoActual?.id && (
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={handleEditar}>
+            Editar estado financiero
+          </Button>
+        </div>
+      )}
+      <div className="grid gap-6 lg:grid-cols-2">
       <Card>
         <CardHeader className="bg-primary text-primary-foreground">
           <CardTitle className="text-2xl font-bold">ACTIVOS</CardTitle>
@@ -242,6 +262,7 @@ export default function BalanceGeneral({ empresaId, periodoId }) {
           </div>
         </CardContent>
       </Card>
+    </div>
     </div>
   )
 }

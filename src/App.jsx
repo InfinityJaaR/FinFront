@@ -19,6 +19,7 @@ import ComparacionesInternasPage from "./pages/GestionEmpresas/Ratios/Comparacio
 import EstadosFinancierosPage from './pages/EstadosFinancieros/EstadosFinancieros';
 import NuevoEstadoPage from './components/EstadosFinancieros/NuevoEstado';
 import NuevoEstadoManualPage from './components/EstadosFinancieros/NuevoEstadoManual';
+import EditarEstadoFinancieroPage from './components/EstadosFinancieros/EditarEstado';
 import ImportarEstadoPage from './components/EstadosFinancieros/ImportarEstado';
 import BenchmarkPromedio from "@/components/GestionEmpresas/Ratios/BenchmarkPromedio";
 import AnalisisBalancePage from './pages/AnalisisVerticalHorizontal/AnalisisBalance';
@@ -375,6 +376,14 @@ function App() {
             <Route
               path="estados-financieros/nuevo-manual"
               element={<NuevoEstadoManualPage />}
+            />
+            <Route
+              path="estados-financieros/:id/editar"
+              element={
+                <RoleRoute allowedRoles={["Administrador", "Admin", "Analista Financiero", "Analista"]}>
+                  <EditarEstadoFinancieroPage />
+                </RoleRoute>
+              }
             />
             <Route
               path="estados-financieros/importar"
