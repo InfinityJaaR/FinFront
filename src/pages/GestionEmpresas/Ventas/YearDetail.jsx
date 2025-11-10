@@ -4,6 +4,10 @@ import useEmpresaActiva from '@/hooks/GestionEmpresas/Empresas/useEmpresaActiva'
 import VentasHistoricasService from '@/services/GestionEmpresas/Ventas/VentasHistoricasService'
 import ProyeccionesService from '@/services/GestionEmpresas/Proyecciones/ProyeccionesService'
 import { useModal } from '@/context/ModalContext'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import Button from '@/components/ui/Button'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Pencil, Trash2, RefreshCw, Eye } from 'lucide-react'
 // Componentes antiguos de proyecciones integrados aquí (lista y detalle)
 // import ProyeccionList from '@/pages/GestionEmpresas/Proyecciones/ProyeccionList'
 // import ProyeccionDetailsModal from '@/pages/GestionEmpresas/Proyecciones/ProyeccionDetailsModal'
@@ -13,6 +17,7 @@ const STALE_KEY = (empresaId, year) => `ventas_stale_${empresaId}_${year}`
 
 const SimpleLine = ({ series, width=800, height=220, colors=['#2563eb','#059669','#ef4444'] }) => {
   // series: [{ name, data: number[12] }]
+  const [hover, setHover] = React.useState(null) // { i, x, y }
   const all = series.flatMap(s => s.data)
   const min = Math.min(...all, 0)
   const max = Math.max(...all, 1)
@@ -20,7 +25,7 @@ const SimpleLine = ({ series, width=800, height=220, colors=['#2563eb','#059669'
   const xStep = (width - pad*2) / (MESES.length - 1)
   const scaleY = (v) => height - pad - ((v - min) / Math.max(max-min,1)) * (height - pad*2)
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-56">
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-56" onMouseLeave={()=>setHover(null)}>
       {/* grid */}
       {Array.from({length:5}).map((_,i)=>{
         const y = pad + (i*(height-pad*2)/4)
@@ -36,6 +41,29 @@ const SimpleLine = ({ series, width=800, height=220, colors=['#2563eb','#059669'
         const d = s.data.map((v,i)=>`${i===0?'M':'L'} ${pad + i*xStep} ${scaleY(v)}`).join(' ')
         return <path key={s.name} d={d} fill="none" stroke={colors[idx%colors.length]} strokeWidth="2" />
       })}
+      {/* hover capture + tooltip */}
+      {MESES.map((_,i)=>{
+        const x = pad + i*xStep
+        const onEnter = (e)=>{
+          const tooltipX = x
+          const tooltipY = pad + 10
+          setHover({ i, x: tooltipX, y: tooltipY })
+        }
+        return (
+          <rect key={i} x={x - xStep/2} y={pad} width={xStep} height={height - pad*2} fill="transparent" onMouseEnter={onEnter} />
+        )
+      })}
+      {hover && (
+        <g>
+          <line x1={hover.x} y1={pad} x2={hover.x} y2={height-pad} stroke="#9ca3af" strokeDasharray="4 2" />
+          <rect x={Math.min(Math.max(hover.x+8, pad), width-180)} y={hover.y} width={170} height={20 + series.length*16} rx={6} ry={6} fill="#111827" opacity="0.9" />
+          <text x={Math.min(Math.max(hover.x+16, pad+8), width-172)} y={hover.y+14} fill="#fff" fontSize="12" fontWeight="bold">{MESES[hover.i]}</text>
+          {series.map((s,idx)=>{
+            const v = s.data[hover.i] ?? 0
+            return <text key={s.name} x={Math.min(Math.max(hover.x+16, pad+8), width-172)} y={hover.y+14+(idx+1)*16} fill="#e5e7eb" fontSize="11">{`${s.name}: $${Number(v).toLocaleString()}`}</text>
+          })}
+        </g>
+      )}
     </svg>
   )
 }
@@ -96,6 +124,7 @@ const YearDetail = () => {
   const clearStale = () => { try { localStorage.removeItem(STALE_KEY(empresaActiva.id, year)) } catch {} }
   const isStale = () => { try { return !!localStorage.getItem(STALE_KEY(empresaActiva.id, year)) } catch { return false } }
 
+  const [editing, setEditing] = useState(null) // mes en edición
   const handleChange = (mes, val) => {
     setRows(rs => rs.map(r => r.mes === mes ? { ...r, monto: val } : r))
   }
@@ -133,7 +162,13 @@ const YearDetail = () => {
   const generate = async (metodo) => {
     if (!complete) { await alert({ title: 'Datos incompletos', message: 'Se requieren 12/12 meses.' }); return }
     try {
-      await ProyeccionesService.generarProyeccion(empresaActiva.id, { metodo_usado: metodo, periodo_proyectado: displayYear + 1 })
+      const payload = { metodo_usado: metodo, periodo_proyectado: displayYear + 1 }
+      // Log de diagnóstico: qué se envía al generar
+      console.log('[Proyecciones] generarProyeccion click', {
+        empresaId: empresaActiva?.id,
+        payload,
+      })
+      await ProyeccionesService.generarProyeccion(empresaActiva.id, payload)
       clearStale()
       await alert({ title: 'Éxito', message: 'Proyección generada.' })
       await loadProys()
@@ -144,6 +179,8 @@ const YearDetail = () => {
 
   const [details, setDetails] = useState({}) // {proyId: detalles[]}
   const [loadingDetails, setLoadingDetails] = useState(false)
+  const [viewOpen, setViewOpen] = useState(false)
+  const [viewData, setViewData] = useState(null)
   const loadDetails = async () => {
     setLoadingDetails(true)
     try {
@@ -169,99 +206,194 @@ const YearDetail = () => {
   }, [proyecciones, details])
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <button onClick={()=>navigate('/dashboard/gestion-empresas/ventas-mensuales')} className="px-3 py-1.5 rounded border">⟵ Volver</button>
-          <h2 className="text-xl font-semibold">Ventas ▸ {displayYear}</h2>
-          <span className={`text-xs px-2 py-1 rounded-full ${complete? 'bg-green-100 text-green-700':'bg-amber-100 text-amber-700'}`}>{complete? 'Completo 12/12' : `Incompleto ${rows.filter(r=>r.monto!=='' && r.monto!=null).length}/12`}</span>
-          <span className="text-xs text-gray-500">Total: {total.toLocaleString()}</span>
-          {isStale() && <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Desactualizada</span>}
-        </div>
-        <div className="inline-flex rounded-2xl border overflow-hidden">
-          <button className={`px-4 py-2 text-sm ${tab==='meses'?'bg-gray-900 text-white':'bg-white'}`} onClick={()=>setTab('meses')}>Meses</button>
-          <button className={`px-4 py-2 text-sm ${tab==='proy'?'bg-gray-900 text-white':'bg-white'}`} onClick={()=>setTab('proy')}>Proyecciones</button>
-        </div>
-      </div>
-
-      {tab==='meses' && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <button onClick={saveAll} className="px-3 py-1.5 rounded bg-green-600 text-white">Guardar cambios</button>
-            <button onClick={deleteYear} className="px-3 py-1.5 rounded border bg-red-600 text-white">Eliminar año</button>
-          </div>
-          {loading ? <div>Cargando...</div> : (
-            <div className="border rounded p-4 overflow-auto">
-              <table className="min-w-full text-sm">
-                <thead><tr className="text-left text-gray-500"><th className="py-2 pr-4">Mes</th><th className="py-2 pr-4">Año</th><th className="py-2 pr-4">Monto</th><th className="py-2 pr-4">Acciones</th></tr></thead>
-                <tbody>
-                  {MESES.map((m,i)=>{
-                    const mes = i+1
-                    const r = rows.find(x=>x.mes===mes) || { anio: year, mes, monto:'' }
-                    return (
-                      <tr key={mes} className="border-t">
-                        <td className="py-2 pr-4">{m}</td>
-                        <td className="py-2 pr-4 text-xs text-gray-500">{r.anio}</td>
-                        <td className="py-2 pr-4">
-                          <input type="number" step="0.01" value={r.monto} onChange={e=>handleChange(mes, e.target.value)} className="border rounded px-2 py-1 w-32" placeholder="0.00" />
-                        </td>
-                        <td className="py-2 pr-4">
-                          {(r.id || r.monto) && (
-                            <button onClick={()=>deleteMonth(r, m)} className="text-red-600 text-xs hover:underline">{r.id? 'Eliminar':'Limpiar'}</button>
-                          )}
-                        </td>
-                      </tr>
+    <div className="w-full max-w-6xl mx-auto space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3 flex-wrap">
+            <Button onClick={()=>navigate('/dashboard/gestion-empresas/ventas-mensuales')} variant="default" size="sm" className="cursor-pointer bg-black text-white hover:text-black">⟵ Volver</Button>
+            <span className="text-lg font-semibold">Ventas ▸ {displayYear}</span>
+            <span className={`text-xs px-2 py-1 rounded-full ${complete? 'bg-green-100 text-green-700':'bg-amber-100 text-amber-700'}`}>{complete? 'Completo 12/12' : `Incompleto ${rows.filter(r=>r.monto!=='' && r.monto!=null).length}/12`}</span>
+            <span className="text-xs text-gray-500">Total: {total.toLocaleString()}</span>
+            {isStale() && <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Desactualizada</span>}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
+            <TabsList>
+              <TabsTrigger value="meses">Meses</TabsTrigger>
+              <TabsTrigger value="proy">Proyecciones</TabsTrigger>
+            </TabsList>
+            <TabsContent value="meses" className="mt-4 space-y-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button onClick={saveAll} variant="primary" size="sm">Guardar cambios</Button>
+                <Button onClick={deleteYear} variant="danger" size="sm">Eliminar año</Button>
+              </div>
+              <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+                <table className="w-full text-sm text-left text-gray-500">
+                  <caption className="p-5 text-base font-semibold text-left text-gray-900 bg-white">
+                    Montos mensuales
+                    <p className="mt-1 text-xs font-normal text-gray-500">Edite los montos por mes. Use el lápiz para activar la edición individual y el ícono de bote para eliminar el mes.</p>
+                  </caption>
+                  <thead className="text-xs uppercase bg-gray-50 text-gray-700">
+                    <tr>
+                      <th scope="col" className="px-6 py-3">Mes</th>
+                      <th scope="col" className="px-6 py-3">Año</th>
+                      <th scope="col" className="px-6 py-3">Monto</th>
+                      <th scope="col" className="px-6 py-3"><span className="sr-only">Acciones</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading && (
+                      <tr><td colSpan={4} className="px-6 py-4">Cargando...</td></tr>
+                    )}
+                    {!loading && MESES.map((label,i)=>{
+                      const mes = i+1
+                      const r = rows.find(x=>x.mes===mes) || { anio: year, mes, monto:'' }
+                      const isEditing = editing === mes
+                      return (
+                        <tr key={mes} className="bg-white border-b border-gray-200 hover:bg-gray-50">
+                          <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{label}</th>
+                          <td className="px-6 py-4 text-xs text-gray-500">{r.anio}</td>
+                          <td className="px-6 py-4">
+                            {isEditing ? (
+                              <input type="number" step="0.01" value={r.monto} onChange={e=>handleChange(mes, e.target.value)} className="border rounded px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0.00" />
+                            ) : (
+                              <div className="w-32 text-right tabular-nums">{r.monto === '' || r.monto == null ? '—' : Number(r.monto).toLocaleString()}</div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end items-center gap-2">
+                              <Button variant="secondary" size="icon" aria-label="Editar" onClick={()=> setEditing(isEditing? null : mes)}>
+                                <Pencil className="size-4" />
+                              </Button>
+                              {(r.id || r.monto) && (
+                                <Button onClick={()=>deleteMonth(r, label)} variant="danger" size="icon" aria-label={`Eliminar ${label}`}>
+                                  <Trash2 className="size-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+            <TabsContent value="proy" className="mt-4 space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex flex-col">
+                    <span>Proyecciones basadas en {displayYear} → {displayYear+1}</span>
+                    <span className="text-xs font-normal text-gray-500">Upsert: si existe, se reemplaza.</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {[{k:'minimos_cuadrados',l:'Mínimos Cuadrados'},{k:'incremento_porcentual',l:'Inc. Porcentual'},{k:'incremento_absoluto',l:'Inc. Absoluto'}].map(m => (
+                      <Button key={m.k} disabled={!complete} onClick={()=>generate(m.k)} variant={complete? 'primary':'default'} size="sm" className={!complete? 'opacity-50 cursor-not-allowed':''}>{m.l}</Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex items-center justify-between">
+                  <CardTitle>Proyecciones {displayYear+1}</CardTitle>
+                  <Button onClick={loadProys} variant="outline" size="sm"><RefreshCw className="mr-2 size-4"/>Recargar</Button>
+                </CardHeader>
+                <CardContent>
+                  {loadingProy? <div>Cargando...</div> : (
+                    proyecciones.length === 0 ? <div className="text-sm text-gray-500">Sin proyecciones.</div> : (
+                      <ul className="text-sm divide-y">
+                        {proyecciones.map(p => (
+                          <li key={p.id} className="flex items-center justify-between py-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{p.metodo_usado}</span>
+                              <span className="text-gray-500">{p.periodo_proyectado || p.periodo}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="secondary" size="icon" aria-label="Ver" onClick={async()=>{
+                                const d = await ProyeccionesService.verProyeccion(empresaActiva.id, p.id)
+                                setViewData(d)
+                                setViewOpen(true)
+                              }}>
+                                <Eye className="size-4" />
+                              </Button>
+                              <Button onClick={async()=>{ await ProyeccionesService.eliminarProyeccion(empresaActiva.id, p.id); await loadProys() }} variant="danger" size="icon" aria-label="Borrar">
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
                     )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {tab==='proy' && (
-        <div className="space-y-4">
-          <div className="border rounded p-4">
-            <h3 className="font-medium">Proyecciones basadas en {displayYear} → {displayYear+1}</h3>
-            <p className="text-xs text-gray-500">Upsert: si existe, se reemplaza.</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {[{k:'minimos_cuadrados',l:'Mínimos Cuadrados'},{k:'incremento_porcentual',l:'Inc. Porcentual'},{k:'incremento_absoluto',l:'Inc. Absoluto'}].map(m => (
-                <button key={m.k} disabled={!complete} onClick={()=>generate(m.k)} className={`px-4 py-2 rounded text-sm border ${complete? 'bg-gray-900 text-white':'bg-gray-100 text-gray-400 cursor-not-allowed'}`}>{m.l}</button>
-              ))}
-            </div>
-          </div>
-
-          <div className="border rounded p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-medium">Proyecciones {displayYear+1}</h3>
-              <button onClick={loadProys} className="px-3 py-1.5 rounded border">Recargar</button>
-            </div>
-            {loadingProy? <div>Cargando...</div> : (
-              proyecciones.length === 0 ? <div className="text-sm text-gray-500">Sin proyecciones.</div> : (
-                <ul className="text-sm space-y-2">
-                  {proyecciones.map(p => (
-                    <li key={p.id} className="flex items-center justify-between border rounded p-2">
-                      <span>{p.metodo_usado} - {p.periodo_proyectado || p.periodo}</span>
-                      <button onClick={async()=>{ await ProyeccionesService.eliminarProyeccion(empresaActiva.id, p.id); await loadProys() }} className="text-red-600 hover:underline">Borrar</button>
-                    </li>
-                  ))}
-                </ul>
-              )
-            )}
-          </div>
-
-          <div className="border rounded p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-medium">Comparador ({displayYear+1})</h3>
-              <button onClick={loadDetails} className="px-3 py-1.5 rounded border">Cargar series</button>
-            </div>
-            {loadingDetails ? <div>Cargando...</div> : (
-              series.length === 0 ? <div className="text-sm text-gray-500">Sin series.</div> : <SimpleLine series={series} />
-            )}
-          </div>
-        </div>
-      )}
+                  )}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex items-center justify-between">
+                  <CardTitle>Comparador ({displayYear+1})</CardTitle>
+                  <Button onClick={loadDetails} variant="outline" size="sm"><RefreshCw className="mr-2 size-4"/>Cargar series</Button>
+                </CardHeader>
+                <CardContent>
+                  {loadingDetails ? <div>Cargando...</div> : (
+                    series.length === 0 ? <div className="text-sm text-gray-500">Sin series.</div> : <SimpleLine series={series} />
+                  )}
+                </CardContent>
+              </Card>
+              {viewOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" role="dialog" aria-modal="true">
+                  <div className="bg-white rounded-lg w-[560px] max-w-[95vw] p-6 shadow-lg">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold">Proyección {viewData?.proyeccion?.periodo_proyectado || viewData?.periodo_proyectado}</h3>
+                      <Button variant="secondary" size="icon" aria-label="Cerrar" onClick={()=>{ setViewOpen(false); setViewData(null) }}>✕</Button>
+                    </div>
+                    {!viewData ? <div>Cargando...</div> : (
+                      <div className="space-y-3 text-sm">
+                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                          <span>ID: {viewData?.proyeccion?.id ?? viewData?.id}</span>
+                          <span>Método: {viewData?.proyeccion?.metodo_usado ?? viewData?.metodo_usado}</span>
+                          <span>Año: {viewData?.proyeccion?.periodo_proyectado ?? viewData?.periodo_proyectado}</span>
+                        </div>
+                        <div className="relative overflow-x-auto shadow-md sm:rounded-lg max-h-72 overflow-y-auto">
+                          <table className="w-full text-sm text-left text-gray-500">
+                            <caption className="p-4 text-base font-semibold text-left text-gray-900 bg-white">
+                              Detalle de la proyección
+                              <p className="mt-1 text-xs font-normal text-gray-500">
+                                Valores por mes para el año {viewData?.proyeccion?.periodo_proyectado ?? viewData?.periodo_proyectado}
+                                {viewData?.proyeccion?.metodo_usado || viewData?.metodo_usado ? ` · Método: ${viewData?.proyeccion?.metodo_usado ?? viewData?.metodo_usado}` : ''}
+                              </p>
+                            </caption>
+                            <thead className="text-xs uppercase bg-gray-50 text-gray-700">
+                              <tr>
+                                <th scope="col" className="px-6 py-3">Mes</th>
+                                <th scope="col" className="px-6 py-3">Monto proyectado</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(viewData.detalles || viewData.data?.detalles || []).map((d,i)=>(
+                                <tr key={i} className="bg-white border-b border-gray-200">
+                                  <th scope="row" className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                    {`${String(d.mes).padStart(2,'0')} · ${MESES[(Number(d.mes||i+1)-1)] || ''}`}
+                                  </th>
+                                  <td className="px-6 py-3">{Number(d.monto_proyectado || d.monto || 0).toLocaleString()}</td>
+                                </tr>
+                              ))}
+                              {(viewData.detalles || viewData.data?.detalles || []).length === 0 && (
+                                <tr><td colSpan={2} className="px-6 py-6 text-center text-gray-500">Sin detalles</td></tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   )
 }

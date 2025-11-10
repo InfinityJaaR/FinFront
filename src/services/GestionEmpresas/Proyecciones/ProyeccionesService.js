@@ -7,7 +7,10 @@ const BASE = `${url}empresas`
 class ProyeccionesService {
   async generarProyeccion(empresaId, body) {
     try {
-      const res = await axios.post(`${BASE}/${empresaId}/proyecciones/generar`, body, {
+      const endpoint = `${BASE}/${empresaId}/proyecciones/generar`
+      // Log de diagnóstico: URL y payload (no se imprimen headers por seguridad)
+      console.log('[API] POST', endpoint, { body })
+      const res = await axios.post(endpoint, body, {
         headers: getAuthHeaders(),
       })
       return res.data
@@ -33,7 +36,9 @@ class ProyeccionesService {
   async generateForProyeccion(empresaId, proyeccionId, body) {
     try {
       // Endpoint opcional: POST /empresas/{empresa}/proyecciones/{proyeccion}/generar
-      const res = await axios.post(`${BASE}/${empresaId}/proyecciones/${proyeccionId}/generar`, body, {
+      const endpoint = `${BASE}/${empresaId}/proyecciones/${proyeccionId}/generar`
+      console.log('[API] POST', endpoint, { body })
+      const res = await axios.post(endpoint, body, {
         headers: getAuthHeaders(),
       })
       return res.data
