@@ -21,6 +21,7 @@ import NuevoEstadoPage from './components/EstadosFinancieros/NuevoEstado';
 import ImportarEstadoPage from './components/EstadosFinancieros/ImportarEstado';
 import BenchmarkPromedio from "@/components/GestionEmpresas/Ratios/BenchmarkPromedio";
 import AnalisisBalancePage from './pages/AnalisisVerticalHorizontal/AnalisisBalance';
+import DashboardGraficosPage from './pages/AnalisisVerticalHorizontal/DashboardGraficos';
 
 import { useParams } from 'react-router-dom';
 
@@ -381,6 +382,16 @@ function App() {
               element={
                 <PermissionRoute requiredPermissions={["analizar_balance"]}>
                   <AnalisisBalancePage />
+                </PermissionRoute>
+              }
+            />
+
+            {/* Dashboard de Gráficos del Análisis Vertical */}
+            <Route
+              path="analisis-balance/graficos"
+              element={
+                <PermissionRoute requiredPermissions={["analizar_balance"]}>
+                  <DashboardGraficosPage />
                 </PermissionRoute>
               }
             />

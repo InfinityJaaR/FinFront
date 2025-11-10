@@ -1,5 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Badge } from "../ui/badge"
+import { Button } from "../ui/button"
+import { BarChart3 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 /**
  * Componente para mostrar tabla de análisis vertical
@@ -8,6 +11,12 @@ import { Badge } from "../ui/badge"
  * @param {boolean} props.loading - Estado de carga
  */
 export default function TablaAnalisisVertical({ datos, loading = false }) {
+  const navigate = useNavigate()
+
+  const handleVerDashboard = () => {
+    navigate('/dashboard/analisis-balance/graficos', { state: { datos } })
+  }
+  
   if (loading) {
     return (
       <Card>
@@ -211,8 +220,20 @@ export default function TablaAnalisisVertical({ datos, loading = false }) {
       {/* Resumen de Totales */}
       <Card>
         <CardHeader>
-          <CardTitle>Totales por Sección</CardTitle>
-          <CardDescription>Base de cálculo para el análisis vertical</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Totales por Sección</CardTitle>
+              <CardDescription>Base de cálculo para el análisis vertical</CardDescription>
+            </div>
+            <Button
+              onClick={handleVerDashboard}
+              className="flex items-center gap-2"
+              variant="default"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Ver Dashboard de Gráficos
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
