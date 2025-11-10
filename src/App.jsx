@@ -22,6 +22,10 @@ import AsignacionCatalogo from "@/components/CatalogoCuentas/AsignacionCatalogo"
 import ImportarEstadoPage from './components/EstadosFinancieros/ImportarEstado';
 import BenchmarkPromedio from "@/components/GestionEmpresas/Ratios/BenchmarkPromedio";
 import BenchmarkRubro from "@/components/GestionEmpresas/Benchmark/BenchmarkRubro";
+import AnalisisBalancePage from "./pages/AnalisisVerticalHorizontal/AnalisisBalance";
+import DashboardGraficos from "./pages/AnalisisVerticalHorizontal/DashboardGraficos";
+import NuevoEstadoManualPage from "./components/EstadosFinancieros/NuevoEstadoManual";
+import EditarEstadoFinancieroPage from "./components/EstadosFinancieros/EditarEstado";
 
 
 
@@ -232,6 +236,22 @@ function App() {
                 </RoleRoute>
               }
             />
+            <Route
+              path="analisis-balance"
+              element={
+                <RoleRoute allowedRoles={["Administrador", "Admin", "Analista", "Analista Financiero"]}>
+                  <AnalisisBalancePage />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="analisis-balance/graficos"
+              element={
+                <RoleRoute allowedRoles={["Administrador", "Admin", "Analista", "Analista Financiero"]}>
+                  <DashboardGraficos />
+                </RoleRoute>
+              }
+            />
 
             {/* Solo Administradores */}
             <Route
@@ -379,8 +399,16 @@ function App() {
               element={<NuevoEstadoPage />}
             />
             <Route
+              path="estados-financieros/nuevo-manual"
+              element={<NuevoEstadoManualPage />}
+            />
+            <Route
               path="estados-financieros/importar"
               element={<ImportarEstadoPage />}
+            />
+            <Route
+              path="estados-financieros/:id/editar"
+              element={<EditarEstadoFinancieroPage />}
             />
             <Route
             path="/dashboard/gestion-empresas/asignacion-catalogo"

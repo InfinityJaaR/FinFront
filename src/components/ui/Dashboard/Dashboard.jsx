@@ -126,6 +126,12 @@ const FinancialDashboard = ({
       // permissions: ["ver_transacciones"]
     },
     {
+      icon: TrendingUpDown,
+      label: "Análisis Balance",
+      href: "/dashboard/analisis-balance",
+      roles: ["Administrador", "Analista Financiero", "Analista", "Admin"],
+    },
+    {
       icon: BetweenHorizontalEnd, // o cualquier ícono que te guste
       label: "Asignación de Catálogo",
       href: "/dashboard/gestion-empresas/asignacion-catalogo",
