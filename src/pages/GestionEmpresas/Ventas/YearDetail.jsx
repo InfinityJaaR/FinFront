@@ -90,6 +90,13 @@ const YearDetail = () => {
   const [loadingProy, setLoadingProy] = useState(false)
   const [toast, setToast] = useState(null) // { type: 'success'|'error', message, ts }
 
+  // Auto-cerrar toast después de unos segundos
+  useEffect(() => {
+    if (!toast) return
+    const timeout = setTimeout(() => setToast(null), toast.type === 'success' ? 2500 : 4000)
+    return () => clearTimeout(timeout)
+  }, [toast])
+
   const complete = rows.length === 12
   const total = rows.reduce((a,x)=> a + Number(x.monto||0), 0)
   // Recalcular año mostrado si los datos vienen con anio distinto a yearParam (seguridad)
@@ -166,6 +173,111 @@ const YearDetail = () => {
     for (const it of data) if (it.id) await VentasHistoricasService.eliminar(empresaActiva.id, it.id)
     await loadRows()
     markStale()
+  }
+
+  // Cargar montos desde Excel y SOBRESCRIBIR los 12 meses
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    if (!['xlsx','xls'].includes(ext)) {
+      await alert({ title: 'Formato inválido', message: 'Seleccione un archivo .xlsx o .xls.' })
+      e.target.value = ''
+      return
+    }
+    try {
+      const data = await file.arrayBuffer()
+      const XLSX = await import('xlsx')
+      const wb = XLSX.read(data, { type: 'array' })
+      const sheetName = wb.SheetNames?.[0]
+      if (!sheetName) { await alert({ title: 'Error', message: 'El archivo no contiene hojas.' }); return }
+      const sheet = wb.Sheets[sheetName]
+      const rowsArr = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null }) // [ [headers...], [row...], ... ]
+      if (!Array.isArray(rowsArr) || rowsArr.length < 2) {
+        await alert({ title: 'Encabezado requerido', message: 'La primera fila debe contener encabezados (Mes, Ventas...).' })
+        return
+      }
+      const headers = (rowsArr[0] || []).map(h => (h ?? '').toString().trim())
+      // Buscar columna MES (igual ignorando may/min)
+      const mesCol = headers.findIndex(h => h.toLowerCase() === 'mes')
+      // Buscar columna VENTAS (que contenga la palabra "ventas")
+      const ventasCol = headers.findIndex(h => h.toLowerCase().includes('ventas'))
+      if (mesCol === -1 || ventasCol === -1) {
+        await alert({ title: 'Columnas no válidas', message: 'Debe existir una columna "Mes" y otra que contenga "Ventas".' })
+        return
+      }
+
+      const MONTH_NAME_MAP = {
+        'ene': 1, 'enero': 1,
+        'feb': 2, 'febrero': 2,
+        'mar': 3, 'marzo': 3,
+        'abr': 4, 'abril': 4,
+        'may': 5, 'mayo': 5,
+        'jun': 6, 'junio': 6,
+        'jul': 7, 'julio': 7,
+        'ago': 8, 'agosto': 8,
+        'sep': 9, 'sept': 9, 'septiembre': 9,
+        'oct': 10, 'octubre': 10,
+        'nov': 11, 'noviembre': 11,
+        'dic': 12, 'diciembre': 12
+      }
+
+      const parsed = []
+      for (let i = 1; i < rowsArr.length; i++) {
+        const row = rowsArr[i] || []
+        let mesVal = row[mesCol]
+        let ventasVal = row[ventasCol]
+        if (mesVal == null || ventasVal == null) continue
+        // Normalizar mes
+        let mesNum
+        if (typeof mesVal === 'number') {
+          mesNum = mesVal
+        } else if (typeof mesVal === 'string') {
+          const m = mesVal.trim().toLowerCase()
+          if (/^[0-9]+$/.test(m)) mesNum = Number(m)
+          else mesNum = MONTH_NAME_MAP[m]
+        }
+        if (!mesNum || mesNum < 1 || mesNum > 12) continue
+        // Normalizar monto
+        if (typeof ventasVal === 'string') {
+          const cleaned = ventasVal.replace(/\s+/g, '').replace(/\./g, '').replace(/,/g, '.')
+          ventasVal = Number(cleaned)
+        }
+        const monto = Number(ventasVal)
+        if (!Number.isFinite(monto)) continue
+        parsed.push({ mes: mesNum, monto })
+      }
+
+      if (parsed.length === 0) {
+        await alert({ title: 'Sin filas válidas', message: 'No se pudieron interpretar montos del Excel.' })
+        return
+      }
+
+      // Quedarse con el último valor por mes (sobrescribir duplicados)
+      const byMonth = {}
+      for (const p of parsed) byMonth[p.mes] = p.monto
+
+      // Validar al menos 11 meses distintos
+      const distinctCount = Object.keys(byMonth).length
+      if (distinctCount < 11) {
+        await alert({ title: 'Datos incompletos', message: `Se requieren al menos 11 meses. Se encontraron ${distinctCount}.` })
+        return
+      }
+
+      // SOBRESCRIBIR: construir 12 meses usando sólo lo importado; faltantes quedan vacíos
+      const updated = Array.from({ length: 12 }).map((_, idx) => {
+        const mes = idx + 1
+        const nuevoMonto = byMonth[mes]
+        return { anio: displayYear, mes, monto: nuevoMonto != null ? nuevoMonto : '' }
+      })
+      setRows(updated)
+      await alert({ title: 'Importación completada', message: 'Se sobrescribieron los montos con los datos del Excel.' })
+    } catch (err) {
+      console.error('Error leyendo Excel:', err)
+      await alert({ title: 'Error', message: err?.message || 'No se pudo procesar el archivo.' })
+    } finally {
+      try { e.target.value = '' } catch { /* noop */ }
+    }
   }
 
   const generate = async (metodo) => {
@@ -310,6 +422,17 @@ const YearDetail = () => {
               <div className="flex items-center gap-2 flex-wrap">
                 <Button onClick={saveAll} variant="primary" size="sm" className="cursor-pointer">Guardar cambios</Button>
                 <Button onClick={deleteYear} variant="danger" size="sm" className="cursor-pointer">Eliminar año</Button>
+                <div className="flex flex-col">
+                  <label htmlFor="excel_upload" className="text-xs font-medium text-gray-700 mb-1">Cargar desde Excel</label>
+                  <input
+                    id="excel_upload"
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleFileUpload}
+                    className="text-xs"
+                    aria-label="Cargar montos desde Excel"
+                  />
+                </div>
               </div>
               <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
                 <table className="w-full text-sm text-left text-gray-500">
