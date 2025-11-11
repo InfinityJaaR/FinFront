@@ -210,6 +210,23 @@ async getEmpresasAll() {
   }
 }
 
+/**
+ * Obtener lista básica de empresas (id, nombre) para selectores
+ * GET /api/empresas-all
+ * @returns {Promise<Array>} Array de objetos { id, nombre }
+ */
+async getEmpresasBasic() {
+  try {
+    const response = await axios.get(`${url}empresas-all`, {
+      headers: getAuthHeaders(),
+    });
+    return response.data?.data ?? [];
+  } catch (error) {
+    console.error('Error al obtener empresas básicas:', error);
+    throw error;
+  }
+}
+
 
 }
 
