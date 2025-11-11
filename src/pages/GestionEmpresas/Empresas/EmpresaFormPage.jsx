@@ -69,34 +69,26 @@ const EmpresaFormPage = () => {
   if (loading) return <div className="p-6">Cargando empresa...</div>;
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <header className="mb-6 empresa-header">
-  <h1 className="text-2xl font-bold mb-3">
-    {isCreate ? 'Crear Empresa' : isEdit ? 'Editar Empresa' : 'Ver Empresa'}
-  </h1>
+    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+      <div className="max-w-3xl mx-auto w-full">
+        <header className="mb-6 empresa-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold mb-0">{isCreate ? 'Crear Empresa' : isEdit ? 'Editar Empresa' : 'Ver Empresa'}</h1>
 
-  {isView && (
-    <button
-      onClick={() => navigate(`/dashboard/empresas/${id}/ratios/comparaciones`)}
-      className="btn-comparaciones"
-    >
+          {isView && (
+            <button onClick={() => navigate(`/dashboard/empresas/${id}/ratios/comparaciones`)} className="btn-comparaciones w-full sm:w-auto text-left sm:text-center">Comparaciones internas</button>
+          )}
+        </header>
 
-      Comparaciones internas
-    </button>
-  )}
-</header>
+        {error && (
+          <div className="mb-4">
+            <Alert variant="destructive">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        )}
 
-
-      {error && (
-        <div className="mb-4">
-          <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
+        <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 sm:p-6 rounded-lg shadow">
         <div>
           <Label>Código</Label>
           <Input name="codigo" value={form.codigo || ''} onChange={handleChange} disabled={isView} className="mt-1" />
@@ -119,17 +111,18 @@ const EmpresaFormPage = () => {
           </Select>
         </div>
 
-          <div className="flex items-center justify-end space-x-3 mt-4">
-            <Button type="button" onClick={() => navigate(-1)} variant="outline" size="lg" className="px-5">Volver</Button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-4">
+            <Button type="button" onClick={() => navigate(-1)} variant="outline" size="lg" className="w-full sm:w-auto">Volver</Button>
 
             {!isView && (
-              <Button type="submit" disabled={saving} variant="primary" size="lg" className="px-6">
+              <Button type="submit" disabled={saving} variant="primary" size="lg" className="w-full sm:w-auto">
                 {saving ? 'Guardando...' : 'Guardar'}
               </Button>
             )}
           </div>
 
       </form>
+      </div>
     </div>
   );
 };

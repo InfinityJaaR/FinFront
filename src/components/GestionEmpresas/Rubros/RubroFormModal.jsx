@@ -231,17 +231,17 @@ const RubroFormModal = () => {
                     </div>
 
                     {/* Footer del Modal (Botones) */}
-                    <footer className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 rounded-b-2xl">
-                        <Button type="button" variant="primary" size="md" onClick={closeModal} disabled={isSubmitting}>Cancelar</Button>
-                        <Button type="submit" variant="success" size="md" disabled={isSubmitting} className="flex items-center gap-2">
-                            {isSubmitting ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                                <Save className="h-5 w-5" />
-                            )}
-                            {isEditing ? 'Guardar Cambios' : 'Crear Rubro'}
-                        </Button>
-                    </footer>
+                        <footer className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-end gap-3 rounded-b-2xl">
+                            <Button type="button" variant="primary" size="md" onClick={closeModal} disabled={isSubmitting} className="w-full sm:w-auto">Cancelar</Button>
+                            <Button type="submit" variant="success" size="md" disabled={isSubmitting} className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                                {isSubmitting ? (
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                ) : (
+                                    <Save className="h-5 w-5" />
+                                )}
+                                {isEditing ? 'Guardar Cambios' : 'Crear Rubro'}
+                            </Button>
+                        </footer>
                 </form>
             </div>
              <style dangerouslySetInnerHTML={{__html: `

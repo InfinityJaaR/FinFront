@@ -176,49 +176,74 @@ const resultado = (empresaId) => {
       </div>
 
       {/* Tabla */}
-      <div className="overflow-x-auto card">
-        <table className="min-w-[760px] w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="text-left px-3 py-2 border w-72">Empresas</th>
-              <th className="text-right px-3 py-2 border w-40">Valor empresa</th>
-              <th className="text-right px-3 py-2 border w-40">Ratio promedio</th>
-              <th className="text-left px-3 py-2 border w-40">Resultado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(row => (
-              <tr key={row.key} className="hover:bg-gray-50">
-                <td className="px-3 py-2 border">
-                  <div className="flex items-center gap-2">
-                    <select
-                      className="border px-2 py-1 rounded w-full"
-                      value={row.empresaId ?? ""}
-                      onChange={(e)=>changeRowEmpresa(row.key, e.target.value ? Number(e.target.value) : "")}
-                    >
-                      <option value="">Elegir empresa</option>
-                      {opcionesEmpresa(row.empresaId).map(e => (
-                        <option key={e.id} value={e.id}>{e.nombre}</option>
-                      ))}
-                    </select>
+{/* === Tabla con estilo moderno tipo card === */}
+<div className="card mt-4 overflow-hidden">
+  <table className="min-w-full text-sm text-gray-700">
+    <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider border-b">
+      <tr>
+        <th className="px-6 py-3 text-left font-semibold">Empresa</th>
+        <th className="px-6 py-3 text-right font-semibold">Valor empresa</th>
+        <th className="px-6 py-3 text-right font-semibold">Ratio promedio</th>
+        <th className="px-6 py-3 text-center font-semibold">Resultado</th>
+      </tr>
+    </thead>
+    <tbody className="divide-y divide-gray-100">
+      {rows.map((row) => (
+        <tr key={row.key} className="hover:bg-gray-50 transition-colors duration-100">
+          {/* Empresa */}
+          <td className="px-6 py-3">
+            <div className="flex items-center gap-2">
+              <select
+                className="border px-2 py-1 rounded-md w-full focus:ring-2 focus:ring-indigo-400"
+                value={row.empresaId ?? ""}
+                onChange={(e) =>
+                  changeRowEmpresa(row.key, e.target.value ? Number(e.target.value) : "")
+                }
+              >
+                <option value="">Elegir empresa</option>
+                {opcionesEmpresa(row.empresaId).map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.nombre}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="btn-icon"
+                onClick={() => removeRow(row.key)}
+                disabled={rows.length <= 2}
+                title="Quitar fila"
+              >
+                ✕
+              </button>
+            </div>
+          </td>
 
-                    <button className="btn-icon" onClick={()=>removeRow(row.key)} disabled={rows.length<=2}>✕</button>
-                  </div>
-                </td>
-                <td className="px-3 py-2 border text-right">{fmt(valores[row.empresaId]) || <span className="muted">—</span>}</td>
-                <td className="px-3 py-2 border text-right">{fmt(promedio) || <span className="muted">—</span>}</td>
-                <td className="px-3 py-2 border">
-                  {["Cumple", "No cumple"].includes(resultado(row.empresaId)) ? (
-                <span className={clsResultado(row.empresaId)}>{resultado(row.empresaId)}</span>
-                  ) : (
-                    <span className="muted">Sin datos</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          {/* Valor empresa */}
+          <td className="px-6 py-3 text-right font-medium text-gray-800">
+            {fmt(valores[row.empresaId]) || <span className="muted">—</span>}
+          </td>
+
+          {/* Ratio promedio */}
+          <td className="px-6 py-3 text-right font-medium text-gray-800">
+            {fmt(promedio) || <span className="muted">—</span>}
+          </td>
+
+          {/* Resultado */}
+          <td className="px-6 py-3 text-center">
+            {["Cumple", "No cumple"].includes(resultado(row.empresaId)) ? (
+              <span className={clsResultado(row.empresaId)}>
+                {resultado(row.empresaId)}
+              </span>
+            ) : (
+              <span className="muted">Sin datos</span>
+            )}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
 
       <p className="text-xs text-gray-500 mt-2">
         El promedio se calcula con todas las empresas del sector que tengan valor para el ratio y periodo seleccionados.

@@ -178,21 +178,23 @@ const RubroFormPage = () => {
   if (loading) return <div className="p-6">Cargando rubro...</div>;
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">{isCreate ? 'Crear Rubro' : isEdit ? 'Editar Rubro' : 'Ver Rubro'}</h1>
-      </header>
+    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+      {/* Contenedor centrado con ancho máximo para mantener tamaño consistente entre pantallas */}
+      <div className="max-w-3xl mx-auto w-full">
+        <header className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold">{isCreate ? 'Crear Rubro' : isEdit ? 'Editar Rubro' : 'Ver Rubro'}</h1>
+        </header>
 
-      {error && (
-        <div className="mb-4">
-          <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        </div>
-      )}
+        {error && (
+          <div className="mb-4">
+            <Alert variant="destructive">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
+        <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 sm:p-6 rounded-lg shadow">
         <div>
           <Label>Código</Label>
           <Input name="codigo" value={form.codigo} onChange={handleChange} disabled={isView} className="mt-1" />
@@ -239,15 +241,16 @@ const RubroFormPage = () => {
           )}
         </div>
 
-        <div className="flex items-center justify-end space-x-3 mt-4">
-          <Button type="button" onClick={() => navigate(-1)} variant="outline" size="lg" className="px-5">Volver</Button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-4">
+          <Button type="button" onClick={() => navigate(-1)} variant="outline" size="lg" className="w-full sm:w-auto">Volver</Button>
           {!isView && (
-            <Button type="submit" disabled={saving} variant="primary" size="lg" className="px-6">
+            <Button type="submit" disabled={saving} variant="primary" size="lg" className="w-full sm:w-auto">
               {saving ? 'Guardando...' : 'Guardar'}
             </Button>
           )}
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };
