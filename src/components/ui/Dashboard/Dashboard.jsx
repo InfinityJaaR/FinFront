@@ -113,6 +113,13 @@ const FinancialDashboard = ({
       roles: ["Administrador"]
     },
     {
+      icon: User,
+      label: "Usuarios",
+      href: "/dashboard/usuarios",
+      permissions: ["manage_users"],
+      roles: ["Administrador"]
+    },
+    {
       icon: Wallet,
       label: "Catalogo de Cuentas",
       href: "/dashboard/catalogo-cuentas",

@@ -28,8 +28,7 @@ import NuevoEstadoManualPage from "./components/EstadosFinancieros/NuevoEstadoMa
 import EditarEstadoFinancieroPage from "./components/EstadosFinancieros/EditarEstado";
 import VentasYearList from './pages/GestionEmpresas/Ventas/YearList';
 import VentasYearDetail from './pages/GestionEmpresas/Ventas/YearDetail';
-
-
+import UsersPage from './pages/GestionUsuarios/UsersPage';
 
 import { useParams } from 'react-router-dom';
 
@@ -268,6 +267,17 @@ function App() {
                 </RoleRoute>
               }
             />
+
+            {/* Gestión de Usuarios - Solo Administradores con permiso manage_users */}
+            <Route
+              path="usuarios"
+              element={
+                <PermissionRoute requiredPermissions={["manage_users"]}>
+                  <UsersPage />
+                </PermissionRoute>
+              }
+            />
+
             {/* Grupo: Gestión de empresas (listas + formularios) */}
             <Route path="gestion-empresas">
               {/* Empresas */}
