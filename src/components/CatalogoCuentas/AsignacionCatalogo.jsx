@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { getListas, getMapeoData, saveMapeo } from "@/services/GestionCuentas/MapeoService";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
+
 
 export default function AsignacionCatalogo() {
   const [empresas, setEmpresas] = useState([]);
@@ -13,6 +15,13 @@ export default function AsignacionCatalogo() {
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const userRole = storedUser?.roles?.[0]?.name || "";
   const isAnalista = userRole === "Analista Financiero";
+  const [modal, setModal] = useState({
+  open: false,
+  title: "",
+  message: "",
+  type: "info",
+});
+
   const onChangeEmpresa = async (id) => {
   setEmpresaId(id);
   if (id) {
@@ -87,18 +96,37 @@ useEffect(() => {
 
   const cuentasSeleccionadas = Object.values(mapeo).filter(Boolean);
 
-  const handleGuardar = async () => {
-    if (!empresaId) return setMsg("Seleccione una empresa.");
-    try {
-      setLoading(true);
-      await saveMapeo(empresaId, mapeo);
-      setMsg("Mapeo guardado correctamente.");
-    } catch {
-      setMsg("Error al guardar el mapeo.");
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleGuardar = async () => {
+  if (!empresaId) {
+    return setModal({
+      open: true,
+      title: "Advertencia",
+      message: "Debe seleccionar una empresa antes de guardar.",
+      type: "warning",
+    });
+  }
+
+  try {
+    setLoading(true);
+    await saveMapeo(empresaId, mapeo);
+    setModal({
+      open: true,
+      title: "Mapeo guardado",
+      message: "El mapeo se ha guardado correctamente.",
+      type: "success",
+    });
+  } catch {
+    setModal({
+      open: true,
+      title: "Error al guardar",
+      message: "Ocurrió un error al guardar el mapeo. Intente nuevamente.",
+      type: "danger",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -124,7 +152,7 @@ useEffect(() => {
 
       </div>
 
-      {msg && <div className="mb-4 text-red-600">{msg}</div>}
+      
 
       {/* Tabla de asignación */}
       {conceptos.length > 0 && (
@@ -205,6 +233,23 @@ useEffect(() => {
       <p className="text-xs text-gray-500 mt-3">
         La misma cuenta no puede asignarse a más de un concepto.
       </p>
+      <Modal
+  isOpen={modal.open}
+  title={modal.title}
+  type={modal.type}
+  onClose={() => setModal((prev) => ({ ...prev, open: false }))}
+  footer={
+    <button
+      onClick={() => setModal((prev) => ({ ...prev, open: false }))}
+      className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+    >
+      Cerrar
+    </button>
+  }
+>
+  {modal.message}
+</Modal>
+
     </div>
   );
 }
