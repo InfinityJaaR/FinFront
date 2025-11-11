@@ -53,19 +53,15 @@ const RatioList = ({
 
     return (
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
-            {/* Mobile cards */}
+            {/* Mobile cards (simplified: sólo código, nombre y acciones) */}
             <div className="sm:hidden p-4 space-y-3">
                 {ratiosArray.map(r => (
                     <div key={r.id} className="border rounded-lg p-3 bg-white">
-                        <div className="flex justify-between items-start mb-2">
-                            <div>
-                                <div className="text-sm font-semibold text-indigo-700">{r.codigo}</div>
-                                <div className="text-sm text-gray-800">{r.nombre}</div>
-                            </div>
-                            <div className="text-xs text-gray-500">{r.sentido}</div>
+                        <div className="mb-2">
+                            <div className="text-sm font-semibold text-indigo-700">{r.codigo}</div>
+                            <div className="text-sm text-gray-800">{r.nombre}</div>
                         </div>
-                        <div className="text-sm text-gray-600 mb-2">{r.formula}</div>
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center justify-start gap-2">
                             <RatioActions ratio={r} onView={onView} onEdit={onEdit} onDelete={onDelete} />
                         </div>
                     </div>
@@ -79,8 +75,6 @@ const RatioList = ({
                         <tr>
                             <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
                             <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fórmula</th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sentido</th>
                             <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
@@ -89,8 +83,6 @@ const RatioList = ({
                             <tr key={ratio.id} className="hover:bg-gray-50">
                                 <td className="px-3 py-3 align-top text-sm font-medium text-gray-900 break-words max-w-xs">{ratio.codigo}</td>
                                 <td className="px-3 py-3 align-top text-sm text-gray-700 break-words max-w-xs">{ratio.nombre}</td>
-                                <td className="px-3 py-3 align-top text-sm text-gray-700 break-words">{ratio.formula}</td>
-                                <td className="px-3 py-3 align-top text-sm text-gray-700">{ratio.sentido}</td>
                                 <td className="px-3 py-3 align-top text-center text-sm font-medium">
                                     <RatioActions ratio={ratio} onView={onView} onEdit={onEdit} onDelete={onDelete} />
                                 </td>
