@@ -184,30 +184,6 @@ const FinancialDashboard = ({
       href: "/dashboard/investments",
       roles: ["Inversor"],
     },
-    {
-      icon: BarChart3,
-      label: "Reportes",
-      href: "/dashboard/reports",
-      // Sin restricciones - todos pueden ver reportes
-    },
-    {
-      icon: PieChart,
-      label: "Análisis",
-      href: "/dashboard/analytics",
-      roles: ["Administrador", "Analista Financiero"],
-    },
-    {
-      icon: Settings,
-      label: "Configuración",
-      href: "/dashboard/settings",
-      roles: ["Administrador"],
-    },
-    {
-      icon: HelpCircle,
-      label: "Ayuda",
-      href: "/dashboard/help"
-      // Sin restricciones - todos pueden ver ayuda
-    },
   ]
 
   // Función para verificar si el usuario tiene acceso a un item del menú
