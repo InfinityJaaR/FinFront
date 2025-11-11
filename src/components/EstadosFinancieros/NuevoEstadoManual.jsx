@@ -306,31 +306,91 @@ export default function NuevoEstadoManualPage(props) {
     }
   }, [empresa, periodo, tipoEstado, obtenerEstado, isEdicion])
 
-  const cuentasDisponibles = useMemo(() => {
+  const cuentasFiltradas = useMemo(() => {
     if (!catalogoCuentas || catalogoCuentas.length === 0) return []
-    const base = catalogoCuentas.filter((cuenta) => !isCuentaCalculada(cuenta))
-    const filtradasPorTipo = filtrarPorTipo(base, tipoEstado)
+
+    const filtradasPorTipo = filtrarPorTipo(catalogoCuentas, tipoEstado)
+    if (!filtradasPorTipo.length) return []
+
+    const ordenadas = [...filtradasPorTipo].sort((a, b) =>
+      (a.codigo || "").localeCompare(b.codigo || "", undefined, { numeric: true })
+    )
 
     if (!busqueda) {
-      return filtradasPorTipo
+      return ordenadas
     }
 
     const termino = busqueda.trim().toLowerCase()
-    return filtradasPorTipo.filter((cuenta) => {
+    return ordenadas.filter((cuenta) => {
       const codigo = cuenta.codigo?.toLowerCase() || ""
       const nombre = cuenta.nombre?.toLowerCase() || ""
       return codigo.includes(termino) || nombre.includes(termino)
     })
   }, [catalogoCuentas, tipoEstado, busqueda])
 
+  const cuentasEditables = useMemo(
+    () => cuentasFiltradas.filter((cuenta) => !isCuentaCalculada(cuenta)),
+    [cuentasFiltradas]
+  )
+
+  const cuentasCalculadas = useMemo(
+    () => cuentasFiltradas.filter((cuenta) => isCuentaCalculada(cuenta)),
+    [cuentasFiltradas]
+  )
+
+  const montosCalculados = useMemo(() => {
+    const mapa = new Map()
+    if (!cuentasFiltradas.length) {
+      return mapa
+    }
+
+    cuentasEditables.forEach((cuenta) => {
+      const valor = parseMonto(sanitizeMonto(montos[cuenta.id]))
+      mapa.set(cuenta.id, Number.isFinite(valor) ? valor : 0)
+    })
+
+    cuentasCalculadas.forEach((cuenta) => {
+      const codigo = cuenta.codigo || ""
+      const manual = parseMonto(sanitizeMonto(montos[cuenta.id]))
+
+      if (!codigo) {
+        mapa.set(cuenta.id, Number.isFinite(manual) ? manual : 0)
+        return
+      }
+
+      const prefijo = `${codigo}.`
+      let suma = 0
+
+      cuentasEditables.forEach((editable) => {
+        const codigoEditable = editable.codigo || ""
+        if (!codigoEditable) return
+        if (codigoEditable === codigo) return
+        if (codigoEditable.startsWith(prefijo)) {
+          const valorEditable = parseMonto(sanitizeMonto(montos[editable.id]))
+          if (Number.isFinite(valorEditable)) {
+            suma += valorEditable
+          }
+        }
+      })
+
+      if (suma === 0 && Number.isFinite(manual) && manual !== 0) {
+        mapa.set(cuenta.id, manual)
+      } else {
+        mapa.set(cuenta.id, suma)
+      }
+    })
+
+    return mapa
+  }, [cuentasFiltradas, cuentasEditables, cuentasCalculadas, montos])
+
   const totalSeleccionado = useMemo(() => {
-    return cuentasDisponibles.reduce((acc, cuenta) => {
+    return cuentasEditables.reduce((acc, cuenta) => {
       const valor = sanitizeMonto(montos[cuenta.id])
       const monto = parseMonto(valor)
       if (monto === null || Number.isNaN(monto)) return acc
       return acc + monto
     }, 0)
-  }, [cuentasDisponibles, montos])
+  }, [cuentasEditables, montos])
 
   const totalesBalance = useMemo(() => {
     if (tipoEstado !== "balance") {
@@ -344,7 +404,7 @@ export default function NuevoEstadoManualPage(props) {
 
     const sumatoria = { activos: 0, pasivos: 0, patrimonio: 0 }
 
-    cuentasDisponibles.forEach((cuenta) => {
+    cuentasEditables.forEach((cuenta) => {
       const codigo = cuenta.codigo || ""
       const valor = sanitizeMonto(montos[cuenta.id])
       const monto = parseMonto(valor)
@@ -368,42 +428,34 @@ export default function NuevoEstadoManualPage(props) {
       totalPatrimonio: sumatoria.patrimonio,
       diferencia,
     }
-  }, [tipoEstado, cuentasDisponibles, montos])
+  }, [tipoEstado, cuentasEditables, montos])
 
   const hayCambios = useMemo(() => {
-    return cuentasDisponibles.some((cuenta) => {
+    return cuentasEditables.some((cuenta) => {
       const valor = sanitizeMonto(montos[cuenta.id])
       const monto = parseMonto(valor)
       return monto !== null && !Number.isNaN(monto)
     })
-  }, [cuentasDisponibles, montos])
+  }, [cuentasEditables, montos])
 
   const { faltanMontos, cuentasPendientes } = useMemo(() => {
-    if (!tipoEstado || !cuentasDisponibles.length) {
+    if (!tipoEstado || !cuentasEditables.length) {
       return { faltanMontos: false, cuentasPendientes: [] }
     }
 
-    const pendientes = cuentasDisponibles.filter((cuenta) => {
+    const pendientes = cuentasEditables.filter((cuenta) => {
       const valor = sanitizeMonto(montos[cuenta.id])
       const monto = parseMonto(valor)
       return monto === null || Number.isNaN(monto)
     })
 
     return { faltanMontos: pendientes.length > 0, cuentasPendientes: pendientes }
-  }, [tipoEstado, cuentasDisponibles, montos])
+  }, [tipoEstado, cuentasEditables, montos])
 
   const filasTabla = useMemo(() => {
     if (!tipoEstado) return []
 
-    if (tipoEstado !== "balance") {
-      return cuentasDisponibles.map((cuenta) => ({
-        tipo: "cuenta",
-        cuenta,
-        categoria: null,
-      }))
-    }
-
-    const categorias = [
+    const categoriasBalance = [
       {
         id: "activos",
         label: "Activos",
@@ -424,35 +476,102 @@ export default function NuevoEstadoManualPage(props) {
       },
     ]
 
-    const filas = []
-    categorias.forEach((categoria) => {
-      const cuentasCategoria = cuentasDisponibles.filter((cuenta) => categoria.match(cuenta.codigo))
-      if (!cuentasCategoria.length) return
+    const categoriasResultados = [
+      {
+        id: "ingresos",
+        label: "Ingresos",
+        color: "bg-emerald-50 dark:bg-emerald-950/40",
+        match: (codigo = "") => codigo.startsWith("4"),
+      },
+      {
+        id: "costos",
+        label: "Costos de Obra",
+        color: "bg-amber-50 dark:bg-amber-950/40",
+        match: (codigo = "") => codigo.startsWith("5"),
+      },
+      {
+        id: "gastos",
+        label: "Gastos Operacionales",
+        color: "bg-sky-50 dark:bg-sky-950/40",
+        match: (codigo = "") => codigo.startsWith("6"),
+      },
+      {
+        id: "otros",
+        label: "Otros Ingresos y Gastos",
+        color: "bg-purple-50 dark:bg-purple-950/40",
+        match: (codigo = "") => codigo.startsWith("7"),
+      },
+      {
+        id: "resultados",
+        label: "Resultados y Utilidades",
+        color: "bg-slate-100 dark:bg-slate-900/60",
+        match: (codigo = "") => codigo.startsWith("8") || codigo.startsWith("9"),
+      },
+    ]
 
-      filas.push({
-        tipo: "categoria",
-        id: categoria.id,
-        label: categoria.label,
-        color: categoria.color,
-      })
+    const construirFilas = (categorias) => {
+      const filas = []
+      const utilizados = new Set()
 
-      cuentasCategoria.forEach((cuenta) => {
+      categorias.forEach((categoria) => {
+        const cuentasCategoria = cuentasFiltradas.filter((cuenta) => categoria.match(cuenta.codigo))
+        if (!cuentasCategoria.length) return
+
         filas.push({
-          tipo: "cuenta",
-          cuenta,
-          categoria: categoria.id,
+          tipo: "categoria",
+          id: categoria.id,
+          label: categoria.label,
+          color: categoria.color,
+        })
+
+        cuentasCategoria.forEach((cuenta) => {
+          filas.push({
+            tipo: "cuenta",
+            cuenta,
+            categoria: categoria.id,
+          })
+          const llave = cuenta.id ?? `${cuenta.codigo || "SIN-CODIGO"}-${cuenta.nombre || "SIN-NOMBRE"}`
+          utilizados.add(llave)
         })
       })
-    })
 
-    return filas
-  }, [tipoEstado, cuentasDisponibles])
+      const restantes = cuentasFiltradas.filter((cuenta) => {
+        const llave = cuenta.id ?? `${cuenta.codigo || "SIN-CODIGO"}-${cuenta.nombre || "SIN-NOMBRE"}`
+        return !utilizados.has(llave)
+      })
+
+      if (restantes.length) {
+        filas.push({
+          tipo: "categoria",
+          id: "otros-sin-clasificar",
+          label: "Otras Cuentas",
+          color: "bg-muted/40 dark:bg-muted/20",
+        })
+
+        restantes.forEach((cuenta) => {
+          filas.push({
+            tipo: "cuenta",
+            cuenta,
+            categoria: "otros-sin-clasificar",
+          })
+        })
+      }
+
+      return filas
+    }
+
+    if (tipoEstado === "balance") {
+      return construirFilas(categoriasBalance)
+    }
+
+    return construirFilas(categoriasResultados)
+  }, [tipoEstado, cuentasFiltradas])
 
   const balanceDescuadrado = useMemo(() => {
     if (tipoEstado !== "balance") return false
-    if (!cuentasDisponibles.length || faltanMontos) return true
+    if (!cuentasEditables.length || faltanMontos) return true
     return Math.abs(totalesBalance.diferencia) >= 0.5
-  }, [tipoEstado, cuentasDisponibles.length, faltanMontos, totalesBalance.diferencia])
+  }, [tipoEstado, cuentasEditables.length, faltanMontos, totalesBalance.diferencia])
 
   const puedeGuardar =
     empresa &&
@@ -462,7 +581,7 @@ export default function NuevoEstadoManualPage(props) {
     !loadingCatalogo &&
     !checkingEstado &&
     !loadingInicial &&
-    cuentasDisponibles.length > 0 &&
+    cuentasEditables.length > 0 &&
     (!balanceDescuadrado || faltanMontos)
 
   const handleKeyDown = (event) => {
@@ -564,14 +683,7 @@ export default function NuevoEstadoManualPage(props) {
     const detalles = []
     const omitidas = []
 
-    cuentasDisponibles.forEach((cuenta) => {
-      const valor = sanitizeMonto(montos[cuenta.id])
-      const monto = parseMonto(valor)
-
-      if (monto === null || Number.isNaN(monto)) {
-        return
-      }
-
+    const agregarDetalle = (cuenta, monto) => {
       if (!cuenta.id) {
         omitidas.push(`${cuenta.codigo || "SIN CODIGO"} - ${cuenta.nombre || "Cuenta sin nombre"}`)
         return
@@ -582,6 +694,23 @@ export default function NuevoEstadoManualPage(props) {
         monto,
         usar_en_ratios: usarEnRatios[cuenta.id] ?? false,
       })
+    }
+
+    cuentasEditables.forEach((cuenta) => {
+      const valor = sanitizeMonto(montos[cuenta.id])
+      const monto = parseMonto(valor)
+
+      if (monto === null || Number.isNaN(monto)) {
+        return
+      }
+
+      agregarDetalle(cuenta, monto)
+    })
+
+    cuentasCalculadas.forEach((cuenta) => {
+      const valorCalculado = montosCalculados.get(cuenta.id)
+      const monto = Number.isFinite(valorCalculado) ? valorCalculado : 0
+      agregarDetalle(cuenta, monto)
     })
 
     return { detalles, omitidas }
@@ -835,7 +964,7 @@ export default function NuevoEstadoManualPage(props) {
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span>
                 {tipoEstado
-                  ? `${cuentasDisponibles.length} cuentas disponibles para ${
+                  ? `${cuentasEditables.length} cuenta(s) editables y ${cuentasCalculadas.length} total(es) visibles para ${
                       tipoEstado === "balance" ? "Balance General" : "Estado de Resultados"
                     }.`
                   : "Selecciona tipo de estado para ver las cuentas disponibles."}
@@ -845,7 +974,7 @@ export default function NuevoEstadoManualPage(props) {
                   Total seleccionado: {formatCurrency(totalSeleccionado)}
                 </span>
               )}
-              {faltanMontos && cuentasDisponibles.length > 0 && (
+              {faltanMontos && cuentasEditables.length > 0 && (
                 <span className="text-amber-700">
                   Faltan {cuentasPendientes.length} cuenta(s) por completar.
                 </span>
@@ -862,13 +991,13 @@ export default function NuevoEstadoManualPage(props) {
               </div>
             )}
 
-            {empresa && tipoEstado && !loadingCatalogo && !loadingInicial && cuentasDisponibles.length === 0 && (
+            {empresa && tipoEstado && !loadingCatalogo && !loadingInicial && cuentasFiltradas.length === 0 && (
               <div className="flex min-h-[200px] items-center justify-center text-center text-sm text-muted-foreground">
                 No se encontraron cuentas base en el catálogo para los filtros aplicados.
               </div>
             )}
 
-            {tipoEstado && cuentasDisponibles.length > 0 && !loadingInicial && (
+            {tipoEstado && cuentasFiltradas.length > 0 && !loadingInicial && (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-sm">
                   <thead>
@@ -895,43 +1024,64 @@ export default function NuevoEstadoManualPage(props) {
                       }
 
                       const cuenta = fila.cuenta
+                      const esCalculada = isCuentaCalculada(cuenta)
                       const valor = sanitizeMonto(montos[cuenta.id])
                       const montoParsed = parseMonto(valor)
                       const estaVacio = valor === "" || valor === undefined || valor === null
-                      const esInvalido = !estaVacio && (montoParsed === null || Number.isNaN(montoParsed)) && valor !== "-"
+                      const esInvalido =
+                        !esCalculada && !estaVacio && (montoParsed === null || Number.isNaN(montoParsed)) && valor !== "-"
                       const hayError = esInvalido
-                      const requiereMonto = mostrarErroresMontos && estaVacio && tipoEstado
+                      const requiereMonto = !esCalculada && mostrarErroresMontos && estaVacio && tipoEstado
+                      const valorCalculado = montosCalculados.get(cuenta.id)
+                      const montoCalculado =
+                        valorCalculado !== undefined && Number.isFinite(valorCalculado) ? valorCalculado : 0
 
                       return (
-                        <tr key={cuenta.id} className="border-b last:border-0">
+                        <tr
+                          key={cuenta.id}
+                          className={`border-b last:border-0 ${esCalculada ? "bg-muted/30" : ""}`}
+                        >
                           <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-foreground">
                             {cuenta.codigo || "—"}
                           </td>
                           <td className="px-4 py-3 text-foreground">{cuenta.nombre || "Cuenta sin nombre"}</td>
                           <td className="px-4 py-3">
-                            <Input
-                              type="text"
-                              inputMode="decimal"
-                              placeholder="0"
-                              value={valor}
-                              onChange={(event) => handleMontoChange(cuenta.id, event.target.value)}
-                              onKeyDown={handleKeyDown}
-                              disabled={saving}
-                              className={`text-right font-medium ${
-                                hayError
-                                  ? "border-destructive focus-visible:ring-destructive"
-                                  : requiereMonto
-                                  ? "border-amber-300 focus-visible:ring-amber-300"
-                                  : ""
-                              }`}
-                              aria-invalid={hayError}
-                              aria-label={`Monto para ${cuenta.codigo || ""} ${cuenta.nombre || ""}`}
-                            />
-                            {hayError && (
-                              <p className="mt-1 text-xs text-destructive">Introduce un número válido (ej. 12345.67).</p>
-                            )}
-                            {!hayError && requiereMonto && (
-                              <p className="mt-1 text-xs text-amber-600">Ingrese un monto para esta cuenta.</p>
+                            {esCalculada ? (
+                              <div className="flex flex-col items-end">
+                                <span className="text-right font-semibold text-foreground">
+                                  {formatCurrency(montoCalculado)}
+                                </span>
+                                <span className="text-xs text-muted-foreground">Total calculado automáticamente.</span>
+                              </div>
+                            ) : (
+                              <>
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  placeholder="0"
+                                  value={valor}
+                                  onChange={(event) => handleMontoChange(cuenta.id, event.target.value)}
+                                  onKeyDown={handleKeyDown}
+                                  disabled={saving}
+                                  className={`text-right font-medium ${
+                                    hayError
+                                      ? "border-destructive focus-visible:ring-destructive"
+                                      : requiereMonto
+                                      ? "border-amber-300 focus-visible:ring-amber-300"
+                                      : ""
+                                  }`}
+                                  aria-invalid={hayError}
+                                  aria-label={`Monto para ${cuenta.codigo || ""} ${cuenta.nombre || ""}`}
+                                />
+                                {hayError && (
+                                  <p className="mt-1 text-xs text-destructive">
+                                    Introduce un número válido (ej. 12345.67).
+                                  </p>
+                                )}
+                                {!hayError && requiereMonto && (
+                                  <p className="mt-1 text-xs text-amber-600">Ingrese un monto para esta cuenta.</p>
+                                )}
+                              </>
                             )}
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -971,7 +1121,7 @@ export default function NuevoEstadoManualPage(props) {
                 </p>
               </>
             ) : (
-              <p>Revisa que cada cuenta tenga un monto ingresado.</p>
+              <p>Revise que cada cuenta tenga un monto ingresado.</p>
             )}
           </div>
           <div className="flex flex-col gap-2 text-sm font-medium text-amber-700 sm:items-end">
