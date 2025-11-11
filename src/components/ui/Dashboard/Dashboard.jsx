@@ -279,7 +279,7 @@ const FinancialDashboard = ({
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
                 <Shield className="h-6 w-6" />
               </div>
-              <span className="font-bold text-lg">FinanceApp</span>
+              <span className="font-bold text-lg">App de Finanzas</span>
             </div>
           )}
           {!isDrawerOpen && (
