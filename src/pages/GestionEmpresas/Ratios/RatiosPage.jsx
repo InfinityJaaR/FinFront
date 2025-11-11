@@ -33,21 +33,20 @@ const RatiosPage = () => {
     };
 
     return (
-        <div className="p-8 space-y-8 bg-gray-50 min-h-screen">
-            <header className="flex justify-between items-center pb-4 border-b border-gray-200">
-                <h1 className="text-3xl font-extrabold text-gray-900">Definiciones de Ratios Financieros</h1>
-                <button
-                    onClick={handleNew}
-                    className="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300"
-                >
+        <div className="p-4 sm:p-8 space-y-6 bg-gray-50 min-h-screen">
+            <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pb-2 border-b border-gray-200">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Definiciones de Ratios Financieros</h1>
+                <div className="w-full sm:w-auto flex justify-start sm:justify-end">
+                  <button onClick={handleNew} className="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 w-full sm:w-auto">
                     <Plus size={20} className="mr-2" />
-                    Nueva Definición
-                </button>
+                    <span className="truncate">Nueva Definición</span>
+                  </button>
+                </div>
             </header>
 
             {/* Herramientas de búsqueda y filtro */}
-            <div className="flex justify-between items-center space-x-4">
-                <div className="relative flex-grow max-w-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="relative w-full sm:max-w-lg">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                     <input
                         type="text"

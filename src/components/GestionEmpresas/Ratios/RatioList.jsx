@@ -53,39 +53,46 @@ const RatioList = ({
 
     return (
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+            {/* Mobile cards */}
+            <div className="sm:hidden p-4 space-y-3">
+                {ratiosArray.map(r => (
+                    <div key={r.id} className="border rounded-lg p-3 bg-white">
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <div className="text-sm font-semibold text-indigo-700">{r.codigo}</div>
+                                <div className="text-sm text-gray-800">{r.nombre}</div>
+                            </div>
+                            <div className="text-xs text-gray-500">{r.sentido}</div>
+                        </div>
+                        <div className="text-sm text-gray-600 mb-2">{r.formula}</div>
+                        <div className="flex items-center justify-between gap-2">
+                            <RatioActions ratio={r} onView={onView} onEdit={onEdit} onDelete={onDelete} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Table for sm+ screens */}
+            <div className="hidden sm:block overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 table-auto">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fórmula</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sentido</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fórmula</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sentido</th>
+                            <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {ratiosArray.map((ratio) => (
                             <tr key={ratio.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {ratio.codigo}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                    {ratio.nombre}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 max-w-xs overflow-hidden text-ellipsis">
-                                    {ratio.formula}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                    {ratio.sentido}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <RatioActions 
-                                        ratio={ratio}
-                                        onView={onView}
-                                        onEdit={onEdit}
-                                        onDelete={onDelete}
-                                    />
+                                <td className="px-3 py-3 align-top text-sm font-medium text-gray-900 break-words max-w-xs">{ratio.codigo}</td>
+                                <td className="px-3 py-3 align-top text-sm text-gray-700 break-words max-w-xs">{ratio.nombre}</td>
+                                <td className="px-3 py-3 align-top text-sm text-gray-700 break-words">{ratio.formula}</td>
+                                <td className="px-3 py-3 align-top text-sm text-gray-700">{ratio.sentido}</td>
+                                <td className="px-3 py-3 align-top text-center text-sm font-medium">
+                                    <RatioActions ratio={ratio} onView={onView} onEdit={onEdit} onDelete={onDelete} />
                                 </td>
                             </tr>
                         ))}
@@ -99,22 +106,12 @@ const RatioList = ({
                     <p className="text-sm text-gray-700">
                         Mostrando <span className="font-medium">{fromIndex}</span> a <span className="font-medium">{toIndex}</span> de <span className="font-medium">{total}</span> resultados
                     </p>
-                    <div className="flex-1 flex justify-end">
-                        <button
-                            onClick={() => onPageChange(current_page - 1)}
-                            disabled={current_page === 1 || isLoading}
-                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-l-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                        >
-                            <ChevronLeft size={16} className="mr-2" />
-                            Anterior
+                    <div className="flex-1 flex justify-end gap-2">
+                        <button onClick={() => onPageChange(current_page - 1)} disabled={current_page === 1 || isLoading} className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">
+                            <ChevronLeft size={16} className="mr-2" />Anterior
                         </button>
-                        <button
-                            onClick={() => onPageChange(current_page + 1)}
-                            disabled={current_page === last_page || isLoading}
-                            className="-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                        >
-                            Siguiente
-                            <ChevronRight size={16} className="ml-2" />
+                        <button onClick={() => onPageChange(current_page + 1)} disabled={current_page === last_page || isLoading} className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">
+                            Siguiente<ChevronRight size={16} className="ml-2" />
                         </button>
                     </div>
                 </div>

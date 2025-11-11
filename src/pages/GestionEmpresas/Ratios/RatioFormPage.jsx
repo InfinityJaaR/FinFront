@@ -276,10 +276,11 @@ const RatioFormPage = () => {
   if (loading) return <div className="p-6">Cargando definición de ratio...</div>;
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">{isCreate ? 'Crear Definición de Ratio' : isEdit ? 'Editar Definición de Ratio' : 'Ver Definición de Ratio'}</h1>
-      </header>
+    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+      <div className="max-w-3xl mx-auto w-full">
+        <header className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold mb-0">{isCreate ? 'Crear Definición de Ratio' : isEdit ? 'Editar Definición de Ratio' : 'Ver Definición de Ratio'}</h1>
+        </header>
 
       {error && (
         <div className="mb-4">
@@ -290,7 +291,7 @@ const RatioFormPage = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 md:p-6 rounded-lg shadow">
+  <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 sm:p-6 rounded-lg shadow">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label>Código</Label>
@@ -420,7 +421,7 @@ const RatioFormPage = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-12 gap-4">
+  <div className="grid grid-cols-12 gap-4">
           <div className="col-span-12 md:col-span-4">
             <Label>Multiplicador numerador</Label>
             <Input name="multiplicador_numerador" value={form.multiplicador_numerador ?? ''} onChange={(e) => setForm(prev => ({ ...prev, multiplicador_numerador: e.target.value }))} disabled={isView} type="number" step="0.01" className="mt-1" placeholder="ej. 1.0" />
@@ -443,10 +444,10 @@ const RatioFormPage = () => {
             </label>
           </div>
 
-          <div className="col-span-12 flex items-center justify-end space-x-3 mt-4">
-            <Button type="button" onClick={() => navigate(-1)} variant="outline" size="lg" className="px-5">Volver</Button>
+          <div className="col-span-12 flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-4">
+            <Button type="button" onClick={() => navigate(-1)} variant="outline" size="lg" className="w-full sm:w-auto">Volver</Button>
             {!isView && ( (authService.hasPermission && authService.hasPermission('gestionar_ratios_definicion')) || (authService.getUserRole && authService.getUserRole() === 'Administrador') ) && (
-              <Button type="submit" disabled={saving} variant="primary" size="lg" className="px-6">
+              <Button type="submit" disabled={saving} variant="primary" size="lg" className="w-full sm:w-auto">
                 {saving ? 'Guardando...' : 'Guardar'}
               </Button>
             )}
@@ -456,6 +457,7 @@ const RatioFormPage = () => {
           </div>
         </div>
       </form>
+      </div>
     </div>
   );
 };
