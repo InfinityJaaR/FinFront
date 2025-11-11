@@ -64,17 +64,19 @@ const RubrosPage = () => {
     // --- Renderizado de Contenido Principal ---
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900">Gestión de Rubros Empresariales</h1>
-                
-                {/* Botón de Creación */}
-                                {canManageRubros && (
-                                    <Button onClick={() => navigate('/dashboard/gestion-empresas/rubros/create')} variant="primary" size="lg" className="flex items-center gap-2">
-                                        <Plus className="h-5 w-5" />
-                                        Nuevo Rubro
-                                    </Button>
-                                )}
-            </header>
+                    <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Rubros Empresariales</h1>
+
+                        {/* Botón de Creación */}
+                        {canManageRubros && (
+                            <div className="w-full sm:w-auto flex justify-start sm:justify-end">
+                                <Button onClick={() => navigate('/dashboard/gestion-empresas/rubros/create')} variant="primary" size="lg" className="flex items-center gap-2 w-full sm:w-auto">
+                                    <Plus className="h-5 w-5" />
+                                    <span className="truncate">Nuevo Rubro</span>
+                                </Button>
+                            </div>
+                        )}
+                    </header>
             
             <div className="bg-white rounded-2xl p-6 shadow-xl border border-gray-100">
                 

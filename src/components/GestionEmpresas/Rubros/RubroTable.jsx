@@ -22,30 +22,30 @@ const RubroTable = ({ rubros, onView, onEdit, onDelete, isSubmitting }) => {
         // Contenedor principal con sombra y bordes redondeados, como en Empresas/Ratios
         <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200 table-auto">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código / Nombre</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Descripción</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código / Nombre</th>
+                            <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Descripción</th>
+                            <th className="px-3 py-2 sm:px-4 sm:py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {rubros.map((rubro) => (
                             <tr key={rubro.id} className="hover:bg-gray-50 transition-colors">
                                 {/* Columna Código/Nombre: Estilo más limpio */}
-                                <td className="px-4 py-3 whitespace-nowrap">
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 align-top">
                                     <div className="text-sm font-semibold text-indigo-700">{rubro.codigo}</div>
                                     <div className="text-xs text-gray-800">{rubro.nombre}</div>
                                 </td>
                                 
-                                {/* DESCRIPCIÓN: ELIMINAMOS 'truncate' y 'whitespace-nowrap' */}
-                                <td className="px-4 py-3 text-sm text-gray-600 max-w-sm">
+                                {/* DESCRIPCIÓN: permitir wrap y limitar ancho en pantallas pequeñas */}
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 text-sm text-gray-600 max-w-xs sm:max-w-sm break-words">
                                     {rubro.descripcion || 'N/A'}
                                 </td>
 
                                 {/* Celda de Acciones */}
-                                <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 text-center text-sm font-medium">
                                     <RubroActionsCell 
                                         rubro={rubro} 
                                         onView={onView} 
