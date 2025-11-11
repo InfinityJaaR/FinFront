@@ -454,117 +454,12 @@ export default function NuevoEstadoManualPage(props) {
 
   const filasTabla = useMemo(() => {
     if (!tipoEstado) return []
-
-    const categoriasBalance = [
-      {
-        id: "activos",
-        label: "Activos",
-        color: "bg-emerald-50 dark:bg-emerald-950/40",
-        match: (codigo = "") => codigo.startsWith("1"),
-      },
-      {
-        id: "pasivos",
-        label: "Pasivos",
-        color: "bg-sky-50 dark:bg-sky-950/40",
-        match: (codigo = "") => codigo.startsWith("2"),
-      },
-      {
-        id: "patrimonio",
-        label: "Patrimonio",
-        color: "bg-amber-50 dark:bg-amber-950/40",
-        match: (codigo = "") => codigo.startsWith("3"),
-      },
-    ]
-
-    const categoriasResultados = [
-      {
-        id: "ingresos",
-        label: "Ingresos",
-        color: "bg-emerald-50 dark:bg-emerald-950/40",
-        match: (codigo = "") => codigo.startsWith("4"),
-      },
-      {
-        id: "costos",
-        label: "Costos de Obra",
-        color: "bg-amber-50 dark:bg-amber-950/40",
-        match: (codigo = "") => codigo.startsWith("5"),
-      },
-      {
-        id: "gastos",
-        label: "Gastos Operacionales",
-        color: "bg-sky-50 dark:bg-sky-950/40",
-        match: (codigo = "") => codigo.startsWith("6"),
-      },
-      {
-        id: "otros",
-        label: "Otros Ingresos y Gastos",
-        color: "bg-purple-50 dark:bg-purple-950/40",
-        match: (codigo = "") => codigo.startsWith("7"),
-      },
-      {
-        id: "resultados",
-        label: "Resultados y Utilidades",
-        color: "bg-slate-100 dark:bg-slate-900/60",
-        match: (codigo = "") => codigo.startsWith("8") || codigo.startsWith("9"),
-      },
-    ]
-
-    const construirFilas = (categorias) => {
-      const filas = []
-      const utilizados = new Set()
-
-      categorias.forEach((categoria) => {
-        const cuentasCategoria = cuentasFiltradas.filter((cuenta) => categoria.match(cuenta.codigo))
-        if (!cuentasCategoria.length) return
-
-        filas.push({
-          tipo: "categoria",
-          id: categoria.id,
-          label: categoria.label,
-          color: categoria.color,
-        })
-
-        cuentasCategoria.forEach((cuenta) => {
-          filas.push({
-            tipo: "cuenta",
-            cuenta,
-            categoria: categoria.id,
-          })
-          const llave = cuenta.id ?? `${cuenta.codigo || "SIN-CODIGO"}-${cuenta.nombre || "SIN-NOMBRE"}`
-          utilizados.add(llave)
-        })
-      })
-
-      const restantes = cuentasFiltradas.filter((cuenta) => {
-        const llave = cuenta.id ?? `${cuenta.codigo || "SIN-CODIGO"}-${cuenta.nombre || "SIN-NOMBRE"}`
-        return !utilizados.has(llave)
-      })
-
-      if (restantes.length) {
-        filas.push({
-          tipo: "categoria",
-          id: "otros-sin-clasificar",
-          label: "Otras Cuentas",
-          color: "bg-muted/40 dark:bg-muted/20",
-        })
-
-        restantes.forEach((cuenta) => {
-          filas.push({
-            tipo: "cuenta",
-            cuenta,
-            categoria: "otros-sin-clasificar",
-          })
-        })
-      }
-
-      return filas
-    }
-
-    if (tipoEstado === "balance") {
-      return construirFilas(categoriasBalance)
-    }
-
-    return construirFilas(categoriasResultados)
+    
+    // Retornar solo las cuentas ordenadas, sin filas de categoría
+    return cuentasFiltradas.map((cuenta) => ({
+      tipo: "cuenta",
+      cuenta,
+    }))
   }, [tipoEstado, cuentasFiltradas])
 
   const balanceDescuadrado = useMemo(() => {
@@ -1010,19 +905,6 @@ export default function NuevoEstadoManualPage(props) {
                   </thead>
                   <tbody>
                     {filasTabla.map((fila) => {
-                      if (fila.tipo === "categoria") {
-                        return (
-                          <tr key={`categoria-${fila.id}`} className="border-b">
-                            <td
-                              colSpan={4}
-                              className={`px-4 py-3 text-sm font-semibold text-foreground ${fila.color} uppercase tracking-wide`}
-                            >
-                              {fila.label}
-                            </td>
-                          </tr>
-                        )
-                      }
-
                       const cuenta = fila.cuenta
                       const esCalculada = isCuentaCalculada(cuenta)
                       const valor = sanitizeMonto(montos[cuenta.id])
@@ -1039,7 +921,11 @@ export default function NuevoEstadoManualPage(props) {
                       return (
                         <tr
                           key={cuenta.id}
-                          className={`border-b last:border-0 ${esCalculada ? "bg-muted/30" : ""}`}
+                          className={`border-b last:border-0 ${
+                            esCalculada 
+                              ? "bg-blue-50 dark:bg-blue-950/30" 
+                              : "bg-white dark:bg-background hover:bg-muted/50"
+                          }`}
                         >
                           <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-foreground">
                             {cuenta.codigo || "—"}
