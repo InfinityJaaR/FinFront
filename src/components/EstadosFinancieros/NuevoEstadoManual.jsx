@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle2, Loader2, RefreshCcw, Save, Search, AlertTriang
 
 import { useEstadosFinancieros } from "@/hooks/EstadosFinancieros/useEstadosFinancieros"
 import CatalogoCuentasService from "@/services/GestionCuentas/CatalogoCuentas/CatalogoCuentasService"
+import authService from "@/services/auth/authService"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -140,6 +141,12 @@ export default function NuevoEstadoManualPage(props) {
 
   const isEdicion = modo === "editar"
 
+  // Obtener información del usuario para auto-completar empresa si es analista financiero
+  const user = authService.getCurrentUser()
+  const userRole = user?.roles?.[0]?.name || ""
+  const isAnalistaFinanciero = userRole === "Analista Financiero"
+  const empresaIdUsuario = user?.empresa_id
+
   useEffect(() => {
     cargarEmpresas()
     cargarPeriodos()
@@ -148,6 +155,17 @@ export default function NuevoEstadoManualPage(props) {
       setError(null)
     }
   }, [cargarEmpresas, cargarPeriodos, setError])
+
+  // Auto-completar empresa si el usuario es analista financiero (solo en modo crear)
+  useEffect(() => {
+    if (!isEdicion && isAnalistaFinanciero && empresaIdUsuario && empresas.length > 0 && !empresa) {
+      // Verificar que la empresa del usuario existe en la lista de empresas disponibles
+      const empresaExiste = empresas.some((emp) => emp.id === empresaIdUsuario)
+      if (empresaExiste) {
+        setEmpresa(empresaIdUsuario.toString())
+      }
+    }
+  }, [isEdicion, isAnalistaFinanciero, empresaIdUsuario, empresas, empresa])
 
   useEffect(() => {
     if (!empresa) {
@@ -716,7 +734,7 @@ export default function NuevoEstadoManualPage(props) {
                     if (formError) setFormError(null)
                     setEmpresa(value)
                   }}
-                  disabled={loadingEstados || saving || isEdicion || loadingInicial}
+                  disabled={loadingEstados || saving || isEdicion || loadingInicial || (isAnalistaFinanciero && !isEdicion)}
                 >
                   <SelectTrigger id="empresa">
                     <SelectValue placeholder="Selecciona una empresa" />
