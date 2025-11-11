@@ -176,27 +176,46 @@ const formatValor = (v, code) => {
   
 
 
-      <table className="w-full border">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="p-2 text-left">Código</th>
-            <th className="p-2 text-left">Nombre</th>
-            <th className="p-2 text-right">Valor</th>
+{/* === Tabla con diseño moderno tipo “card” === */}
+<div className="bg-white shadow-md rounded-lg overflow-hidden mt-4">
+  <table className="min-w-full text-sm text-gray-700">
+    <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider border-b">
+      <tr>
+        <th className="px-6 py-3 text-left font-semibold">CÓDIGO</th>
+        <th className="px-6 py-3 text-left font-semibold">NOMBRE</th>
+        <th className="px-6 py-3 text-right font-semibold">VALOR</th>
+      </tr>
+    </thead>
+    <tbody className="divide-y divide-gray-100">
+      {valores.length > 0 ? (
+        valores.map((v) => (
+          <tr
+            key={v.codigo}
+            className="hover:bg-gray-50 transition-colors duration-100"
+          >
+            <td className="px-6 py-3 font-semibold text-gray-900">
+              {v.codigo}
+            </td>
+            <td className="px-6 py-3">{v.nombre}</td>
+            <td className="px-6 py-3 text-right font-medium text-gray-800">
+              {formatValor(v.valor, v.codigo)}
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {valores.map(v=>(
-            <tr key={v.codigo} className="border-t">
-              <td className="p-2">{v.codigo}</td>
-              <td className="p-2">{v.nombre}</td>
-              <td className="p-2 text-right">{formatValor(v.valor, v.codigo)}</td>
-            </tr>
-          ))}
-          {!valores.length && !loading && (
-            <tr><td className="p-3 text-center text-gray-500" colSpan={3}>Sin datos</td></tr>
-          )}
-        </tbody>
-      </table>
+        ))
+      ) : (
+        <tr>
+          <td
+            colSpan={3}
+            className="px-6 py-6 text-center text-gray-400 italic"
+          >
+            Sin datos
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
     </div>
   );
 }
