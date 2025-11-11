@@ -36,28 +36,30 @@ const EmpresasPage = () => {
     };
 
     return (
-        <div className="p-8 space-y-8 bg-gray-50 min-h-screen">
-            <header className="flex justify-between items-center pb-4 border-b border-gray-200">
-                <h1 className="text-3xl font-extrabold text-gray-900">Gestión de Empresas</h1>
-                <Button onClick={handleNew} variant="primary" size="lg" className="flex items-center gap-2">
-                    <Plus size={18} />
-                    Nueva Empresa
-                </Button>
-            </header>
+        <div className="p-4 sm:p-8 space-y-6 bg-gray-50 min-h-screen">
+                <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pb-2 border-b border-gray-200">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Gestión de Empresas</h1>
+                    <div className="w-full sm:w-auto flex justify-start sm:justify-end">
+                      <Button onClick={handleNew} variant="primary" size="lg" className="flex items-center gap-2 w-full sm:w-auto">
+                          <Plus size={18} />
+                          <span className="truncate">Nueva Empresa</span>
+                      </Button>
+                    </div>
+                </header>
 
-            {/* Herramientas de búsqueda y filtro */}
-            <div className="flex justify-between items-center space-x-4">
-                <div className="relative flex-grow max-w-lg">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Buscar por código o nombre..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
-                    />
+                {/* Herramientas de búsqueda y filtro */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="relative w-full sm:max-w-lg">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Buscar por código o nombre..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
+                        />
+                    </div>
                 </div>
-            </div>
 
             {/* Listado de Empresas */}
             <EmpresaList

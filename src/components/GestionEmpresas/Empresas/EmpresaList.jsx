@@ -63,66 +63,51 @@ const EmpresaList = ({
 
     return (
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+            {/* Mobile cards */}
+            <div className="sm:hidden p-4 space-y-3">
+                {empresasArray.map(e => (
+                    <div key={e.id} className="border rounded-lg p-3 bg-white">
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <div className="text-sm font-semibold text-indigo-700">{e.codigo}</div>
+                                <div className="text-sm text-gray-800">{e.nombre}</div>
+                            </div>
+                            <div className="text-xs text-gray-500">{e.rubro ? e.rubro.nombre : 'N/A'}</div>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex-1">
+                                {/* acciones */}
+                                <EmpresaActions empresa={e} onView={onView} onEdit={onEdit} onDelete={onDelete} />
+                            </div>
+                            <Link to={`/dashboard/empresas/${e.id}/ratios`} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 text-gray-100 hover:bg-zinc-800">Ver Ratios</Link>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Table for sm+ screens */}
+            <div className="hidden sm:block overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 table-auto">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rubro</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rubro</th>
+                            <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {empresasArray.map((empresa) => (
                             <tr key={empresa.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {empresa.codigo}
+                                <td className="px-3 py-3 align-top text-sm font-medium text-gray-900 break-words max-w-xs">{empresa.codigo}</td>
+                                <td className="px-3 py-3 align-top text-sm text-gray-700 break-words max-w-xs">{empresa.nombre}</td>
+                                <td className="px-3 py-3 align-top text-sm text-gray-700 break-words max-w-xs">{empresa.rubro ? empresa.rubro.nombre : 'N/A'}</td>
+                                <td className="px-3 py-3 align-top text-center text-sm font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <EmpresaActions empresa={empresa} onView={onView} onEdit={onEdit} onDelete={onDelete} />
+                                        <Link to={`/dashboard/empresas/${empresa.id}/ratios`} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 text-gray-100 hover:bg-zinc-800">Ver Ratios</Link>
+                                    </div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                    {empresa.nombre}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                    {/* Asumimos que la relación rubro se carga en el index del backend si es necesario */}
-                                    {empresa.rubro ? empresa.rubro.nombre : 'N/A'} 
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-  <div className="flex items-center justify-center gap-2">
-    <EmpresaActions
-      empresa={empresa}
-      onView={onView}
-      onEdit={onEdit}
-      onDelete={onDelete}
-    />
-
-    {/* Botón Ratios con mismo look & feel que los otros */}
-    <Link
-      to={`/dashboard/empresas/${empresa.id}/ratios`}
-      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl
-             bg-zinc-900 text-gray-100 hover:bg-zinc-800
-             focus:outline-none focus:ring-2 focus:ring-zinc-400/40
-             transition-colors"
-      title="Ver Ratios"
-    >
-      {/* lucide-react icon opcional */}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-4 w-4"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M3 3v18h18" />
-        <path d="M19 9l-5 5-3-3-4 4" />
-      </svg>
-      <span >Ver Ratios</span>
-    </Link>
-  </div>
-</td>
-
                             </tr>
                         ))}
                     </tbody>
