@@ -58,7 +58,8 @@ const EmpresaFormPage = () => {
         await EmpresasService.createEmpresa(form);
         await modal.alert({ title: 'Éxito', message: 'Empresa creada' });
       }
-      navigate('/dashboard/gestion-empresas/empresas');
+      // Al volver a la lista, indicamos que se debe refrescar y mostrar la primera página
+      navigate('/dashboard/gestion-empresas/empresas', { state: { refresh: true } });
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error al guardar');
     } finally {
@@ -109,6 +110,18 @@ const EmpresaFormPage = () => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div>
+          <Label>Descripción</Label>
+          <textarea
+            name="descripcion"
+            value={form.descripcion || ''}
+            onChange={handleChange}
+            disabled={isView}
+            className="mt-1 w-full min-h-[80px] p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
+            placeholder="Descripción opcional de la empresa"
+          />
         </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-4">

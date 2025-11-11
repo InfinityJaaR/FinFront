@@ -34,40 +34,62 @@ const useEmpresas = () => {
             let items = [];
             let meta = {};
 
-            // Caso 1: la respuesta ya es un array
+            // Helper: intenta extraer items/meta desde un paginator-like object
+            const extractFromPaginator = (p) => {
+                if (!p || typeof p !== 'object') return null;
+                // p.data suele contener el array de items en paginadores (Laravel, etc.)
+                if (Array.isArray(p.data)) {
+                    return {
+                        items: p.data,
+                        meta: {
+                            current_page: p.current_page ?? p.meta?.current_page ?? null,
+                            last_page: p.last_page ?? p.meta?.last_page ?? null,
+                            per_page: p.per_page ?? p.meta?.per_page ?? null,
+                            total: p.total ?? p.meta?.total ?? null,
+                        }
+                    }
+                }
+                return null;
+            }
+
+            // Caso A: la respuesta ya es un array simple
             if (Array.isArray(response)) {
                 items = response;
             }
-            // Caso 2: { data: [...] , meta: {...} }
-            else if (response && Array.isArray(response.data)) {
-                items = response.data;
-                meta = response.meta || {};
-            }
-            // Caso 3: { data: { data: [...], ... } } (por ejemplo, envoltura success/data)
-            else if (response && response.data && Array.isArray(response.data.data)) {
-                items = response.data.data;
-                meta = response.data.meta || response.data.pagination || {};
-            }
-            // Caso 4: paginación plana en el objeto: { data: [...], current_page, last_page, total, per_page }
-            else if (response && response.data && Array.isArray(response.data)) {
-                items = response.data;
-                meta = response.meta || {
-                    current_page: response.current_page,
-                    last_page: response.last_page,
-                    total: response.total,
-                    per_page: response.per_page,
-                };
-            }
-            // Caso 5: la respuesta es un objeto con claves top-level que contienen array en 'items' o 'results'
-            else if (response && Array.isArray(response.items)) {
-                items = response.items;
-                meta = response.meta || {};
-            } else if (response && Array.isArray(response.results)) {
-                items = response.results;
-                meta = response.meta || {};
-            }
-            // Fallback: intentar sacar response.data.data o response.data
+
+            // Caso B: respuesta directa con paginator en response.data (p. ej. { success: true, data: paginator })
             else if (response && response.data) {
+                // Si response.data es un paginator-like
+                const fromP = extractFromPaginator(response.data);
+                if (fromP) {
+                    items = fromP.items;
+                    meta = fromP.meta;
+                }
+                // Si response itself es paginator-like (service podría devolver paginator directamente)
+                else if (Array.isArray(response.data)) {
+                    items = response.data;
+                    meta = response.meta || {};
+                }
+                // Caso: respuesta plana { data: { data: [...] } }
+                else if (response.data && Array.isArray(response.data.data)) {
+                    items = response.data.data;
+                    meta = response.data.meta || response.data.pagination || {};
+                }
+            }
+
+            // Caso C: respuesta con keys alternativas
+            if ((!items || items.length === 0) && response) {
+                if (Array.isArray(response.items)) {
+                    items = response.items;
+                    meta = response.meta || {};
+                } else if (Array.isArray(response.results)) {
+                    items = response.results;
+                    meta = response.meta || {};
+                }
+            }
+
+            // Fallback final: intentar extraer cualquier array disponible
+            if ((!items || items.length === 0) && response && response.data) {
                 if (Array.isArray(response.data.data)) items = response.data.data;
                 else if (Array.isArray(response.data)) items = response.data;
             }
@@ -79,8 +101,9 @@ const useEmpresas = () => {
             setEmpresasData({ data: items, meta });
 
             // Actualizar página actual si viene en meta
-            if (meta.current_page) {
-                setCurrentPage(meta.current_page);
+            const metaPage = meta.current_page || meta.currentPage || meta.page || null;
+            if (metaPage) {
+                setCurrentPage(Number(metaPage));
             }
         } catch (err) {
             setError('Error al cargar la lista de empresas. Por favor, intente de nuevo.');

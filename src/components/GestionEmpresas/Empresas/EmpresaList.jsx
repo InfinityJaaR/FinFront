@@ -3,6 +3,7 @@ import EmpresaActions from './EmpresaActions.jsx';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button'
+import Pagination from '@/components/ui/Pagination'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 
 
@@ -114,24 +115,10 @@ const EmpresaList = ({
                 </table>
             </div>
 
-            {/* Paginación */}
-            {last_page > 1 && (
-                        <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                            <p className="text-sm text-gray-700">
-                                Mostrando <span className="font-medium">{fromIndex}</span> a <span className="font-medium">{toIndex}</span> de <span className="font-medium">{total}</span> resultados
-                            </p>
-                            <div className="flex-1 flex justify-end gap-2">
-                                <Button size="sm" variant="outline" onClick={() => onPageChange(current_page - 1)} disabled={current_page === 1 || isLoading}>
-                                    <ChevronLeft size={16} className="mr-2" />
-                                    Anterior
-                                </Button>
-                                <Button size="sm" variant="outline" onClick={() => onPageChange(current_page + 1)} disabled={current_page === last_page || isLoading}>
-                                    Siguiente
-                                    <ChevronRight size={16} className="ml-2" />
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+            {/* Paginación: reemplazamos por componente reutilizable que maneja páginas numéricas */}
+            { (last_page > 1) && (
+              <Pagination pagination={{ current_page, last_page, total, per_page }} onPageChange={onPageChange} isLoading={isLoading} />
+            ) }
         </div>
     );
 };

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 // Corrección de rutas: Añadir extensiones para asegurar la resolución
 import useEmpresas from '@/hooks/GestionEmpresas/Empresas/useEmpresa';
 import EmpresaList from '@/components/GestionEmpresas/Empresas/EmpresaList';
@@ -34,6 +34,18 @@ const EmpresasPage = () => {
     const handleNew = () => {
         navigate('/dashboard/gestion-empresas/empresas/create');
     };
+
+    // Si venimos del formulario con state.refresh, forzamos mostrar la primera página
+    const location = useLocation();
+    useEffect(() => {
+        if (location?.state?.refresh) {
+            // setCurrentPage viene del hook y está en el scope
+            setCurrentPage(1);
+            // limpiar el state para evitar refrescos repetidos: reemplazamos la URL sin state
+            navigate(location.pathname + (location.search || ''), { replace: true, state: {} });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <div className="p-4 sm:p-8 space-y-6 bg-gray-50 min-h-screen">
