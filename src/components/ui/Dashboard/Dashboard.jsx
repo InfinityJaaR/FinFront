@@ -184,30 +184,6 @@ const FinancialDashboard = ({
       href: "/dashboard/investments",
       roles: ["Inversor"],
     },
-    {
-      icon: BarChart3,
-      label: "Reportes",
-      href: "/dashboard/reports",
-      // Sin restricciones - todos pueden ver reportes
-    },
-    {
-      icon: PieChart,
-      label: "Análisis",
-      href: "/dashboard/analytics",
-      roles: ["Administrador", "Analista Financiero"],
-    },
-    {
-      icon: Settings,
-      label: "Configuración",
-      href: "/dashboard/settings",
-      roles: ["Administrador"],
-    },
-    {
-      icon: HelpCircle,
-      label: "Ayuda",
-      href: "/dashboard/help"
-      // Sin restricciones - todos pueden ver ayuda
-    },
   ]
 
   // Función para verificar si el usuario tiene acceso a un item del menú
@@ -303,7 +279,7 @@ const FinancialDashboard = ({
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
                 <Shield className="h-6 w-6" />
               </div>
-              <span className="font-bold text-lg">FinanceApp</span>
+              <span className="font-bold text-lg">App de Finanzas</span>
             </div>
           )}
           {!isDrawerOpen && (
