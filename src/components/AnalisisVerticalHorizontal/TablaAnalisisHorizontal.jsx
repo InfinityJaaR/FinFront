@@ -69,14 +69,96 @@ export default function TablaAnalisisHorizontal({ datos, periodos = [], loading 
     }
   }
 
+  // Verificar si una cuenta tiene cuentas de detalle asociadas
+  const tieneCuentasDetalle = (linea, todasLasLineas) => {
+    const codigo = linea.codigo?.toString().trim() || ''
+    const codigoNormalizado = codigo
+    
+    // FORMATO NUMÉRICO (4 dígitos)
+    if (/^\d{4}$/.test(codigoNormalizado)) {
+      // MAYOR (x000): buscar SUB_MAYOR (xx00) que empiecen con el mismo primer dígito
+      if (/\d000$/.test(codigoNormalizado)) {
+        const primerDigito = codigoNormalizado[0]
+        return todasLasLineas.some(l => {
+          const codigoL = l.codigo?.toString().trim() || ''
+          return /^\d{4}$/.test(codigoL) && 
+                 codigoL[0] === primerDigito && 
+                 /\d{2}00$/.test(codigoL) &&
+                 codigoL !== codigoNormalizado
+        })
+      }
+      
+      // SUB_MAYOR (xx00): buscar DETALLE (xxx0) o MOVIMIENTO (xxxx) que empiecen con los mismos dos primeros dígitos
+      if (/\d{2}00$/.test(codigoNormalizado)) {
+        const primerosDosDigitos = codigoNormalizado.substring(0, 2)
+        return todasLasLineas.some(l => {
+          const codigoL = l.codigo?.toString().trim() || ''
+          return /^\d{4}$/.test(codigoL) && 
+                 codigoL.substring(0, 2) === primerosDosDigitos &&
+                 !/\d{2}00$/.test(codigoL) &&
+                 codigoL !== codigoNormalizado
+        })
+      }
+    }
+    
+    // FORMATO CON PUNTOS
+    if (codigoNormalizado.includes('.')) {
+      const partes = codigoNormalizado.split('.')
+      
+      // MAYOR (1): buscar SUB_MAYOR (1.x)
+      if (partes.length === 1 && /^\d$/.test(codigoNormalizado)) {
+        return todasLasLineas.some(l => {
+          const codigoL = l.codigo?.toString().trim() || ''
+          if (!codigoL.includes('.')) return false
+          const partesL = codigoL.split('.')
+          return partesL.length === 2 && 
+                 partesL[0] === partes[0] &&
+                 codigoL !== codigoNormalizado
+        })
+      }
+      
+      // SUB_MAYOR (1.1): buscar DETALLE (1.1.x)
+      if (partes.length === 2 && /^\d+\.\d+$/.test(codigoNormalizado)) {
+        return todasLasLineas.some(l => {
+          const codigoL = l.codigo?.toString().trim() || ''
+          if (!codigoL.includes('.')) return false
+          const partesL = codigoL.split('.')
+          return partesL.length >= 3 &&
+                 partesL[0] === partes[0] &&
+                 partesL[1] === partes[1] &&
+                 codigoL !== codigoNormalizado
+        })
+      }
+    }
+    
+    // MAYOR: un solo dígito sin punto (ej: 1, 2, 3)
+    if (/^\d$/.test(codigoNormalizado)) {
+      return todasLasLineas.some(l => {
+        const codigoL = l.codigo?.toString().trim() || ''
+        // Buscar cuentas que empiecen con este dígito seguido de punto o sean SUB_MAYOR numéricas
+        return (codigoL.startsWith(codigoNormalizado + '.') || 
+                (/^\d{4}$/.test(codigoL) && codigoL[0] === codigoNormalizado && /\d{2}00$/.test(codigoL))) &&
+               codigoL !== codigoNormalizado
+      })
+    }
+    
+    return false
+  }
+
   // Determinar si una cuenta es submayor o detalle (incluye MAYOR y SUB_MAYOR)
   // Soporta dos formatos de códigos:
   // Formato numérico (4 dígitos): 1000, 1100, 1110, 1111
   // Formato con puntos: 1, 1.1, 1.1.1, 1.1.1.01
-  const esSubmayor = (linea) => {
+  // IMPORTANTE: Solo es submayor si tiene cuentas de detalle asociadas
+  const esSubmayor = (linea, todasLasLineas = []) => {
     // Si tiene el campo es_calculada, usar ese
     if (linea.es_calculada !== undefined) {
-      return linea.es_calculada === true || linea.es_calculada === 1
+      const esCalculada = linea.es_calculada === true || linea.es_calculada === 1
+      // Si es calculada, verificar si tiene hijos antes de considerarla submayor
+      if (esCalculada) {
+        return tieneCuentasDetalle(linea, todasLasLineas)
+      }
+      return false
     }
     
     const codigo = linea.codigo?.toString().trim() || ''
@@ -84,10 +166,14 @@ export default function TablaAnalisisHorizontal({ datos, periodos = [], loading 
     // FORMATO NUMÉRICO (4 dígitos)
     if (/^\d{4}$/.test(codigo)) {
       // MAYOR: termina en "000" (ej: 1000, 2000, 3000)
-      if (/\d000$/.test(codigo)) return true
+      if (/\d000$/.test(codigo)) {
+        return tieneCuentasDetalle(linea, todasLasLineas)
+      }
       
       // SUB_MAYOR: termina en "00" pero no en "000" (ej: 1100, 1200, 2100)
-      if (/\d{2}00$/.test(codigo)) return true
+      if (/\d{2}00$/.test(codigo)) {
+        return tieneCuentasDetalle(linea, todasLasLineas)
+      }
       
       // DETALLE y MOVIMIENTO no son submayor
       return false
@@ -98,17 +184,23 @@ export default function TablaAnalisisHorizontal({ datos, periodos = [], loading 
       const partes = codigo.split('.')
       
       // MAYOR: un solo dígito (ej: 1, 2, 3)
-      if (partes.length === 1 && /^\d$/.test(codigo)) return true
+      if (partes.length === 1 && /^\d$/.test(codigo)) {
+        return tieneCuentasDetalle(linea, todasLasLineas)
+      }
       
       // SUB_MAYOR: dos niveles (ej: 1.1, 1.2, 2.1)
-      if (partes.length === 2 && /^\d+\.\d+$/.test(codigo)) return true
+      if (partes.length === 2 && /^\d+\.\d+$/.test(codigo)) {
+        return tieneCuentasDetalle(linea, todasLasLineas)
+      }
       
       // DETALLE: tres o más niveles (ej: 1.1.1, 1.1.1.01)
       return false
     }
     
     // MAYOR: un solo dígito sin punto (ej: 1, 2, 3)
-    if (/^\d$/.test(codigo)) return true
+    if (/^\d$/.test(codigo)) {
+      return tieneCuentasDetalle(linea, todasLasLineas)
+    }
     
     // Por defecto, no es submayor
     return false
@@ -283,7 +375,7 @@ export default function TablaAnalisisHorizontal({ datos, periodos = [], loading 
                     {lineas.map((linea, index) => {
                       const variacionPct = linea.variacion_pct
                       const esVariacionSignificativa = variacionPct !== null && Math.abs(variacionPct) > 0.1 // Mayor al 10%
-                      const esCuentaSubmayor = esSubmayor(linea)
+                      const esCuentaSubmayor = esSubmayor(linea, lineas)
                       const esCuentaMayor = esMayor(linea)
                       const nivelIndentacion = obtenerNivelIndentacion(linea.codigo)
                       
