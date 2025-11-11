@@ -249,13 +249,13 @@ export default function DashboardGraficos() {
                             id: 1,
                             value: datosAnalisis?.totales?.PASIVO || 0,
                             label: 'Pasivo',
-                            color: '#dc2626'
+                            color: '#f59e0b'
                           },
                           {
                             id: 2,
                             value: datosAnalisis?.totales?.PATRIMONIO || 0,
                             label: 'Patrimonio',
-                            color: '#16a34a'
+                            color: '#8b5cf6'
                           }
                         ].filter(item => item.value > 0),
                         highlightScope: { faded: 'global', highlighted: 'item' },
@@ -475,10 +475,10 @@ export default function DashboardGraficos() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-red-600"></div>
+                    <div className="h-3 w-3 rounded-full bg-amber-600"></div>
                     Composición del Pasivo
                   </CardTitle>
-                  <p className="text-lg font-semibold text-red-600">
+                  <p className="text-lg font-semibold text-amber-600">
                     {formatearMoneda(datosAnalisis?.totales?.PASIVO || 0)}
                   </p>
                 </div>
@@ -509,7 +509,7 @@ export default function DashboardGraficos() {
                           data: datosPasivo.porcentajes,
                           label: 'Participación (%)',
                           valueFormatter: (value) => `${value.toFixed(2)}%`,
-                          color: '#dc2626'
+                          color: '#f59e0b'
                         }
                       ]}
                       width={1000}
@@ -532,10 +532,10 @@ export default function DashboardGraficos() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-green-600"></div>
+                    <div className="h-3 w-3 rounded-full bg-purple-600"></div>
                     Composición del Patrimonio
                   </CardTitle>
-                  <p className="text-lg font-semibold text-green-600">
+                  <p className="text-lg font-semibold text-purple-600">
                     {formatearMoneda(datosAnalisis?.totales?.PATRIMONIO || 0)}
                   </p>
                 </div>
@@ -566,7 +566,7 @@ export default function DashboardGraficos() {
                           data: datosPatrimonio.porcentajes,
                           label: 'Participación (%)',
                           valueFormatter: (value) => `${value.toFixed(2)}%`,
-                          color: '#16a34a'
+                          color: '#8b5cf6'
                         }
                       ]}
                       width={1000}

@@ -110,8 +110,14 @@ export default function AnalisisBalancePage() {
   const handleExportarHorizontal = () => {
     if (!analisisHorizontal?.lineas) return
     
-    const nombreArchivo = `analisis_horizontal_${periodoBaseSeleccionado}_vs_${periodoCompSeleccionado}_${Date.now()}.csv`
-    exportarCSV(analisisHorizontal.lineas, 'horizontal', nombreArchivo)
+    // Obtener años de los periodos seleccionados
+    const periodoBase = periodos.find(p => p.id === parseInt(periodoBaseSeleccionado))
+    const periodoComp = periodos.find(p => p.id === parseInt(periodoCompSeleccionado))
+    const anioBase = periodoBase?.anio || periodoBase?.año || periodoBaseSeleccionado
+    const anioComp = periodoComp?.anio || periodoComp?.año || periodoCompSeleccionado
+    
+    const nombreArchivo = `analisis_horizontal_${anioBase}_vs_${anioComp}_${Date.now()}.csv`
+    exportarCSV(analisisHorizontal.lineas, 'horizontal', nombreArchivo, { anioBase, anioComp })
   }
 
   const handleCambioTab = (value) => {

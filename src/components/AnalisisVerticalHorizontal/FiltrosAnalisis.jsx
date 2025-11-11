@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Button } from "../ui/button"
-import { Search, Download, X } from "lucide-react"
+import { Search, Download } from "lucide-react"
 
 /**
  * Componente de filtros para análisis vertical y horizontal
@@ -121,31 +121,21 @@ export default function FiltrosAnalisis({
 
               {/* Sección */}
               <div className="space-y-1.5 sm:col-span-2 lg:col-span-1 xl:col-span-2">
-                <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="seccion" className="text-xs font-medium text-foreground">
-                    Sección (opcional)
-                  </label>
-                  {seccionSeleccionada && (
-                    <button
-                      onClick={() => onSeccionChange(undefined)}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                      disabled={loading}
-                      aria-label="Limpiar sección"
-                    >
-                      <X className="h-3 w-3" />
-                      <span className="hidden sm:inline">Limpiar</span>
-                    </button>
-                  )}
-                </div>
+                <label htmlFor="seccion" className="text-xs font-medium text-foreground">
+                  Sección (opcional)
+                </label>
                 <Select 
-                  value={seccionSeleccionada || undefined} 
-                  onValueChange={onSeccionChange} 
+                  value={seccionSeleccionada || "TODAS"} 
+                  onValueChange={(value) => onSeccionChange(value === "TODAS" ? undefined : value)} 
                   disabled={loading}
                 >
                   <SelectTrigger id="seccion" aria-label="Seleccionar sección" className="w-full">
                     <SelectValue placeholder="Todas las secciones" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="TODAS">
+                      Todas las secciones
+                    </SelectItem>
                     {secciones.map((seccion) => (
                       <SelectItem key={seccion.value} value={seccion.value}>
                         {seccion.label}

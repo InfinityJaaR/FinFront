@@ -67,9 +67,9 @@ export default function TablaAnalisisVertical({ datos, loading = false }) {
       case 'ACTIVO':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
       case 'PASIVO':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
       case 'PATRIMONIO':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
     }
@@ -245,13 +245,13 @@ export default function TablaAnalisisVertical({ datos, loading = false }) {
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Total Pasivo</p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold text-amber-600">
                 {formatearMoneda(datos.totales?.PASIVO || 0)}
               </p>
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Total Patrimonio</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-purple-600">
                 {formatearMoneda(datos.totales?.PATRIMONIO || 0)}
               </p>
             </div>
@@ -321,10 +321,10 @@ export default function TablaAnalisisVertical({ datos, loading = false }) {
                     return (
                       <tr 
                         key={`${linea.catalogo_cuenta_id}-${index}`}
-                        className={`border-b transition-colors ${
+                        className={`border-b ${
                           esCuentaSubmayor 
-                            ? 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800' 
-                            : 'hover:bg-muted/50'
+                            ? 'bg-gray-50 dark:bg-gray-800/50' 
+                            : ''
                         }`}
                       >
                         <td className={`px-4 py-3 text-sm font-mono ${

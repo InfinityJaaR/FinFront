@@ -290,12 +290,12 @@ export default function TablaAnalisisHorizontal({ datos, periodos = [], loading 
                       return (
                         <tr 
                           key={`${linea.catalogo_cuenta_id}-${index}`}
-                          className={`border-b transition-colors ${
+                          className={`border-b ${
                             esCuentaSubmayor 
-                              ? 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800' 
+                              ? 'bg-gray-50 dark:bg-gray-800/50' 
                               : esVariacionSignificativa 
-                                ? 'bg-yellow-50 dark:bg-yellow-950/20 hover:bg-yellow-100 dark:hover:bg-yellow-950/30'
-                                : 'hover:bg-muted/50'
+                                ? 'bg-yellow-50 dark:bg-yellow-950/20'
+                                : ''
                           }`}
                         >
                           <td className={`px-4 py-3 text-sm font-mono ${
