@@ -875,23 +875,13 @@ export default function NuevoEstadoManualPage(props) {
             </div>
 
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <span>
-                {tipoEstado
-                  ? `${cuentasEditables.length} cuenta(s) editables y ${cuentasCalculadas.length} total(es) visibles para ${
-                      tipoEstado === "balance" ? "Balance General" : "Estado de Resultados"
-                    }.`
-                  : "Selecciona tipo de estado para ver las cuentas disponibles."}
-              </span>
+              
               {hayCambios && (
                 <span className="font-medium text-foreground">
                   Total seleccionado: {formatCurrency(totalSeleccionado)}
                 </span>
               )}
-              {faltanMontos && cuentasEditables.length > 0 && (
-                <span className="text-amber-700">
-                  Faltan {cuentasPendientes.length} cuenta(s) por completar.
-                </span>
-              )}
+              
             </div>
           </CardHeader>
 
